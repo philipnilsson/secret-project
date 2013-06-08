@@ -1,0 +1,16 @@
+  body {
+    background-color: #444444;
+  }
+  .cell {
+    width: 30px;
+    height: 30px;
+    background-color: #222222;
+    display: inline-block;
+    margin: 1px;
+  }
+  .active {
+    background-color: red;
+  }
+  .set {
+    background-color: yellow;  
+  }
