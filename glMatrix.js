@@ -402,7 +402,7 @@ mat3.set = function(mat, dest) {
 
 /*
  * mat3.identity
- * Sets a mat3 to an identity matrix
+ * Sets a mat3 to an identity testMatrix
  *
  * Params:
  * dest - mat3 to set
@@ -588,7 +588,7 @@ mat4.set = function(mat, dest) {
 
 /*
  * mat4.identity
- * Sets a mat4 to an identity matrix
+ * Sets a mat4 to an identity testMatrix
  *
  * Params:
  * dest - mat4 to set
@@ -679,7 +679,7 @@ mat4.transpose = function(mat, dest) {
  * determinant of mat
  */
 mat4.determinant = function(mat) {
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2], a03 = mat[3];
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6], a13 = mat[7];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10], a23 = mat[11];
@@ -695,11 +695,11 @@ mat4.determinant = function(mat) {
 
 /*
  * mat4.inverse
- * Calculates the inverse matrix of a mat4
+ * Calculates the inverse testMatrix of a mat4
  *
  * Params:
  * mat - mat4 to calculate inverse of
- * dest - Optional, mat4 receiving inverse matrix. If not specified result is written to mat
+ * dest - Optional, mat4 receiving inverse testMatrix. If not specified result is written to mat
  *
  * Returns:
  * dest is specified, mat otherwise
@@ -707,7 +707,7 @@ mat4.determinant = function(mat) {
 mat4.inverse = function(mat, dest) {
 	if(!dest) { dest = mat; }
 	
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2], a03 = mat[3];
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6], a13 = mat[7];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10], a23 = mat[11];
@@ -813,7 +813,7 @@ mat4.toMat3 = function(mat, dest) {
 /*
  * mat4.toInverseMat3
  * Calculates the inverse of the upper 3x3 elements of a mat4 and copies the result into a mat3
- * The resulting matrix is useful for calculating transformed normals
+ * The resulting testMatrix is useful for calculating transformed normals
  *
  * Params:
  * mat - mat4 containing values to invert and copy
@@ -823,7 +823,7 @@ mat4.toMat3 = function(mat, dest) {
  * dest is specified, a new mat3 otherwise
  */
 mat4.toInverseMat3 = function(mat, dest) {
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2];
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10];
@@ -853,7 +853,7 @@ mat4.toInverseMat3 = function(mat, dest) {
 
 /*
  * mat4.multiply
- * Performs a matrix multiplication
+ * Performs a testMatrix multiplication
  *
  * Params:
  * mat - mat4, first operand
@@ -866,7 +866,7 @@ mat4.toInverseMat3 = function(mat, dest) {
 mat4.multiply = function(mat, mat2, dest) {
 	if(!dest) { dest = mat }
 	
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2], a03 = mat[3];
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6], a13 = mat[7];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10], a23 = mat[11];
@@ -899,7 +899,7 @@ mat4.multiply = function(mat, mat2, dest) {
 
 /*
  * mat4.multiplyVec3
- * Transforms a vec3 with the given matrix
+ * Transforms a vec3 with the given testMatrix
  * 4th vector component is implicitly '1'
  *
  * Params:
@@ -924,7 +924,7 @@ mat4.multiplyVec3 = function(mat, vec, dest) {
 
 /*
  * mat4.multiplyVec4
- * Transforms a vec4 with the given matrix
+ * Transforms a vec4 with the given testMatrix
  *
  * Params:
  * mat - mat4 to transform the vector with
@@ -949,7 +949,7 @@ mat4.multiplyVec4 = function(mat, vec, dest) {
 
 /*
  * mat4.translate
- * Translates a matrix by the given vector
+ * Translates a testMatrix by the given vector
  *
  * Params:
  * mat - mat4 to translate
@@ -996,7 +996,7 @@ mat4.translate = function(mat, vec, dest) {
 
 /*
  * mat4.scale
- * Scales a matrix by the given vector
+ * Scales a testMatrix by the given vector
  *
  * Params:
  * mat - mat4 to scale
@@ -1046,7 +1046,7 @@ mat4.scale = function(mat, vec, dest) {
 
 /*
  * mat4.rotate
- * Rotates a matrix by the given angle around the specified axis
+ * Rotates a testMatrix by the given angle around the specified axis
  * If rotating around a primary axis (X,Y,Z) one of the specialized rotation functions should be used instead for performance
  *
  * Params:
@@ -1073,12 +1073,12 @@ mat4.rotate = function(mat, angle, axis, dest) {
 	var c = Math.cos(angle);
 	var t = 1-c;
 	
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2], a03 = mat[3];
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6], a13 = mat[7];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10], a23 = mat[11];
 	
-	// Construct the elements of the rotation matrix
+	// Construct the elements of the rotation testMatrix
 	var b00 = x*x*t + c, b01 = y*x*t + z*s, b02 = z*x*t - y*s;
 	var b10 = x*y*t - z*s, b11 = y*y*t + c, b12 = z*y*t + x*s;
 	var b20 = x*z*t + y*s, b21 = y*z*t - x*s, b22 = z*z*t + c;
@@ -1092,7 +1092,7 @@ mat4.rotate = function(mat, angle, axis, dest) {
 		dest[15] = mat[15];
 	}
 	
-	// Perform rotation-specific matrix multiplication
+	// Perform rotation-specific testMatrix multiplication
 	dest[0] = a00*b00 + a10*b01 + a20*b02;
 	dest[1] = a01*b00 + a11*b01 + a21*b02;
 	dest[2] = a02*b00 + a12*b01 + a22*b02;
@@ -1112,7 +1112,7 @@ mat4.rotate = function(mat, angle, axis, dest) {
 
 /*
  * mat4.rotateX
- * Rotates a matrix by the given angle around the X axis
+ * Rotates a testMatrix by the given angle around the X axis
  *
  * Params:
  * mat - mat4 to rotate
@@ -1126,7 +1126,7 @@ mat4.rotateX = function(mat, angle, dest) {
 	var s = Math.sin(angle);
 	var c = Math.cos(angle);
 	
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6], a13 = mat[7];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10], a23 = mat[11];
 
@@ -1144,7 +1144,7 @@ mat4.rotateX = function(mat, angle, dest) {
 		dest[15] = mat[15];
 	}
 	
-	// Perform axis-specific matrix multiplication
+	// Perform axis-specific testMatrix multiplication
 	dest[4] = a10*c + a20*s;
 	dest[5] = a11*c + a21*s;
 	dest[6] = a12*c + a22*s;
@@ -1159,7 +1159,7 @@ mat4.rotateX = function(mat, angle, dest) {
 
 /*
  * mat4.rotateY
- * Rotates a matrix by the given angle around the Y axis
+ * Rotates a testMatrix by the given angle around the Y axis
  *
  * Params:
  * mat - mat4 to rotate
@@ -1173,7 +1173,7 @@ mat4.rotateY = function(mat, angle, dest) {
 	var s = Math.sin(angle);
 	var c = Math.cos(angle);
 	
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2], a03 = mat[3];
 	var a20 = mat[8], a21 = mat[9], a22 = mat[10], a23 = mat[11];
 	
@@ -1191,7 +1191,7 @@ mat4.rotateY = function(mat, angle, dest) {
 		dest[15] = mat[15];
 	}
 	
-	// Perform axis-specific matrix multiplication
+	// Perform axis-specific testMatrix multiplication
 	dest[0] = a00*c + a20*-s;
 	dest[1] = a01*c + a21*-s;
 	dest[2] = a02*c + a22*-s;
@@ -1206,7 +1206,7 @@ mat4.rotateY = function(mat, angle, dest) {
 
 /*
  * mat4.rotateZ
- * Rotates a matrix by the given angle around the Z axis
+ * Rotates a testMatrix by the given angle around the Z axis
  *
  * Params:
  * mat - mat4 to rotate
@@ -1220,7 +1220,7 @@ mat4.rotateZ = function(mat, angle, dest) {
 	var s = Math.sin(angle);
 	var c = Math.cos(angle);
 	
-	// Cache the matrix values (makes for huge speed increases!)
+	// Cache the testMatrix values (makes for huge speed increases!)
 	var a00 = mat[0], a01 = mat[1], a02 = mat[2], a03 = mat[3];
 	var a10 = mat[4], a11 = mat[5], a12 = mat[6], a13 = mat[7];
 	
@@ -1238,7 +1238,7 @@ mat4.rotateZ = function(mat, angle, dest) {
 		dest[15] = mat[15];
 	}
 	
-	// Perform axis-specific matrix multiplication
+	// Perform axis-specific testMatrix multiplication
 	dest[0] = a00*c + a10*s;
 	dest[1] = a01*c + a11*s;
 	dest[2] = a02*c + a12*s;
@@ -1254,13 +1254,13 @@ mat4.rotateZ = function(mat, angle, dest) {
 
 /*
  * mat4.frustum
- * Generates a frustum matrix with the given bounds
+ * Generates a frustum testMatrix with the given bounds
  *
  * Params:
  * left, right - scalar, left and right bounds of the frustum
  * bottom, top - scalar, bottom and top bounds of the frustum
  * near, far - scalar, near and far bounds of the frustum
- * dest - Optional, mat4 frustum matrix will be written into
+ * dest - Optional, mat4 frustum testMatrix will be written into
  *
  * Returns:
  * dest if specified, a new mat4 otherwise
@@ -1291,13 +1291,13 @@ mat4.frustum = function(left, right, bottom, top, near, far, dest) {
 
 /*
  * mat4.perspective
- * Generates a perspective projection matrix with the given bounds
+ * Generates a perspective projection testMatrix with the given bounds
  *
  * Params:
  * fovy - scalar, vertical field of view
  * aspect - scalar, aspect ratio. typically viewport width/height
  * near, far - scalar, near and far bounds of the frustum
- * dest - Optional, mat4 frustum matrix will be written into
+ * dest - Optional, mat4 frustum testMatrix will be written into
  *
  * Returns:
  * dest if specified, a new mat4 otherwise
@@ -1310,13 +1310,13 @@ mat4.perspective = function(fovy, aspect, near, far, dest) {
 
 /*
  * mat4.ortho
- * Generates a orthogonal projection matrix with the given bounds
+ * Generates a orthogonal projection testMatrix with the given bounds
  *
  * Params:
  * left, right - scalar, left and right bounds of the frustum
  * bottom, top - scalar, bottom and top bounds of the frustum
  * near, far - scalar, near and far bounds of the frustum
- * dest - Optional, mat4 frustum matrix will be written into
+ * dest - Optional, mat4 frustum testMatrix will be written into
  *
  * Returns:
  * dest if specified, a new mat4 otherwise
@@ -1347,13 +1347,13 @@ mat4.ortho = function(left, right, bottom, top, near, far, dest) {
 
 /*
  * mat4.ortho
- * Generates a look-at matrix with the given eye position, focal point, and up axis
+ * Generates a look-at testMatrix with the given eye position, focal point, and up axis
  *
  * Params:
  * eye - vec3, position of the viewer
  * center - vec3, point the viewer is looking at
  * up - vec3 pointing "up"
- * dest - Optional, mat4 frustum matrix will be written into
+ * dest - Optional, mat4 frustum testMatrix will be written into
  *
  * Returns:
  * dest if specified, a new mat4 otherwise
@@ -1667,10 +1667,10 @@ quat4.multiplyVec3 = function(quat, vec, dest) {
 
 /*
  * quat4.toMat3
- * Calculates a 3x3 matrix from the given quat4
+ * Calculates a 3x3 testMatrix from the given quat4
  *
  * Params:
- * quat - quat4 to create matrix from
+ * quat - quat4 to create testMatrix from
  * dest - Optional, mat3 receiving operation result
  *
  * Returns:
@@ -1714,10 +1714,10 @@ quat4.toMat3 = function(quat, dest) {
 
 /*
  * quat4.toMat4
- * Calculates a 4x4 matrix from the given quat4
+ * Calculates a 4x4 testMatrix from the given quat4
  *
  * Params:
- * quat - quat4 to create matrix from
+ * quat - quat4 to create testMatrix from
  * dest - Optional, mat4 receiving operation result
  *
  * Returns:

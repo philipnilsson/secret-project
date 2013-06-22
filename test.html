@@ -1,8 +1,31 @@
 <html>
 
-<head> <title> Tetris! </title> </head>
+<head><title> Tetris! </title>
 
-<link rel="stylesheet" type="text/css" href="tetris.css" />
+    <script src="glMatrix-0.9.5.min.js"></script>
+    <script src="mywebgl.js"></script>
+
+    <!-- Fragment shader program -->
+    <script id="shader-fs" type="x-shader/x-fragment">
+        void main(void) {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    </script>
+
+    <!-- Vertex shader program -->
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute highp vec3 aVertexPosition;
+
+        uniform highp mat4 uMVP;
+
+        void main(void) {
+        gl_Position = uMVP * vec4(aVertexPosition, 1.0);
+        }
+    </script>
+
+</head>
+
+<link rel="stylesheet" type="text/css" href="tetris.css"/>
 
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="bacon.js"></script>
@@ -10,70 +33,80 @@
 <script type="text/javascript" src="tetris.js"></script>
 
 <script type="text/javascript">
-  
-var w = 10, h = 20;
 
-$(function() {
-  drawGameArea(w, h);
+    var w = 10, h = 20;
 
-  var eq = function(x) { return function(y) { return x === y; }; };
-  
-  var keys = $(document).asEventStream('keydown').map('.keyCode');
-  var ups    = keys.filter(eq(38));
-  var lefts  = keys.filter(eq(37));
-  var rights = keys.filter(eq(39));
-  var downs  = keys.filter(eq(40));
-  var space  = keys.filter(eq(32));
-  var ts     = Bacon.interval(200);
-
-  board = new Board(10, 20);
-  
-  var randomBlock = function() {
-    var ts = Object.keys(blocks);
-    return blocks[ts[Math.floor(Math.random() * ts.length)]];
-  };
-  
-  var move = function(x,y,rot) { 
-    return function(st) { return st.tryMove(x,y,rot); };
-  };
-   
-  var game = function() {
-   
-    var init = new BlockState(randomBlock(), board);
-    
-    if (init.collides()) {
-      init.isSet = true;
-      return Bacon.once(init);
-    }
-
-    var block = Bacon.update(
-       init,
-       [ups],    move( 0, 0, 3),
-       [downs],  move( 0, 0, 1),
-       [lefts],  move(-1, 0, 0),
-       [rights], move( 1, 0, 0),
-       [ts],     move( 0, 1, 0),
-       [space],  function(st) { return st.down(); }
-    );
-
-    return block
-      .takeUntil(function(x) { return x.isSet; })
-      .flatMapEnd(game);
-  };
-  
-  var g = game()
-  g.onValue(function (block) { 
-    if (block.isSet) 
-      setBlock(block, board.set(block));
-    drawBlock(block); 
-  });
-  
-  g.onEnd(function() {
-    console.log('lol you dead');
-  })
-});
+    //$(function() {
+    //  drawGameArea(w, h);
+    //
+    //  var eq = function(x) { return function(y) { return x === y; }; };
+    //
+    //  var keys = $(document).asEventStream('keydown').map('.keyCode');
+    //  var ups    = keys.filter(eq(38));
+    //  var lefts  = keys.filter(eq(37));
+    //  var rights = keys.filter(eq(39));
+    //  var downs  = keys.filter(eq(40));
+    //  var space  = keys.filter(eq(32));
+    //  var ts     = Bacon.interval(200);
+    //
+    //  board = new Board(10, 20);
+    //
+    //  var randomBlock = function() {
+    //    var ts = Object.keys(blocks);
+    //    return blocks[ts[Math.floor(Math.random() * ts.length)]];
+    //  };
+    //
+    //  var move = function(x,y,rot) {
+    //    return function(st) { return st.tryMove(x,y,rot); };
+    //  };
+    //
+    //  var game = function() {
+    //
+    //    var init = new BlockState(randomBlock(), board);
+    //
+    //    if (init.collides()) {
+    //      init.isSet = true;
+    //      return Bacon.once(init);
+    //    }
+    //
+    //    var block = Bacon.update(
+    //       init,
+    //       [ups],    move( 0, 0, 3),
+    //       [downs],  move( 0, 0, 1),
+    //       [lefts],  move(-1, 0, 0),
+    //       [rights], move( 1, 0, 0),
+    //       [ts],     move( 0, 1, 0),
+    //       [space],  function(st) { return st.down(); }
+    //    );
+    //
+    //    return block
+    //      .takeUntil(function(x) { return x.isSet; })
+    //      .flatMapEnd(game);
+    //  };
+    //
+    //  var g = game()
+    //  g.onValue(function (block) {
+    //    if (block.isSet)
+    //      setBlock(block, board.set(block));
+    //    drawBlock(block);
+    //  });
+    //
+    //  g.onEnd(function() {
+    //    console.log('lol you dead');
+    //  })
+    //});
 </script>
 
-<body> <div id="game"> </div> </body>
+<body onload="start()">
+
+<!-- Add your site or application content here -->
+<p>Hello world! Mr månkey Boilerplate.</p>
+
+
+<canvas id="glCanvas" width="400" height="800">
+    you fail me browser!
+</canvas>
+
+</body>
 
 </html>

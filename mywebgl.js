@@ -7,7 +7,7 @@ var livePieceX = 0;
 var livePieceY = 0;
 
 
-var matrix = [
+var testMatrix = [
     [1, 0, 0, 0, 1],
     [0, 0, 1, 0, 0],
     [0, 1, 0, 1, 0],
@@ -51,12 +51,12 @@ function GLSquare(){
 
 function start(){
     var canvas = document.getElementById("glCanvas");
-    var gl = this.gl = this.canvas.getContext("webgl");
+    var gl = this.gl = canvas.getContext("webgl");
     board = new TetrisBoard(new WebGLRenderer(gl));
     log("this is board: " + board);
 
 //    TODO remove.. for test only
-//    board.drawShapeAt(matrix, null, 0, 0);
+//    board.drawShapeAt(testMatrix, null, 0, 0);
 
 
     // Setup shader map
@@ -172,10 +172,10 @@ function WebGLRenderer(gl) {
     //  var ratio = canvas.width / canvas.height;
     //  var matrixP = mat4.perspective(45, ratio, 0.1, 100.0);
 
-    //setup projection matrix
+    //setup projection testMatrix
     this.matrixP = mat4.ortho(0, this.grid.w, this.grid.h, 0, 0.1, 100);
 
-    //setup view matrix
+    //setup view testMatrix
     this.matrixV = mat4.lookAt(this.camera.eye, this.camera.center, this.camera.up);
 
     gl.clearColor(this.clearColor[0],
@@ -222,7 +222,7 @@ function WebGLRenderer(gl) {
             gl.useProgram(shader.program);
 
             //FIXME Should be related to the piece being rendered.
-            //setup model matrix
+            //setup model testMatrix
             mat4.identity(this.matrixM);
             mat4.translate(this.matrixM, [rect.x, rect.y, 0]);
 
@@ -309,12 +309,12 @@ function TetrisBoard(renderer){
     this.createTetrisPiece = function createTetrisPiece(matrix, type, x, y) {
         log("this is self: " + self);
 
-        //TODO count non zeros of matrix to align size
+        //TODO count non zeros of testMatrix to align size
         var baseElements = [];
 
         //FIXME TEST add one
 
-        //loop through matrix and create TetrisRect's
+        //loop through testMatrix and create TetrisRect's
         var len = matrix.length;
 
 
@@ -402,8 +402,8 @@ function ShaderFactory(gl){
         var gl = self.gl;
 
         var program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
         gl.linkProgram(program);
 
         // If creating the shader program failed, alert
@@ -416,20 +416,24 @@ function ShaderFactory(gl){
     }
 
     function createShader(glShaderType, src){
-        var gl = self.gl;
+        if( glShaderType && src){
+            var gl = self.gl;
 
-        var shader = gl.createShader(type);
+            var shader = gl.createShader(glShaderType);
 
-        gl.shaderSource(shader, theSource);
-        gl.compileShader(shader);
+            gl.shaderSource(shader, src);
+            gl.compileShader(shader);
 
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
-            return -1;
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
+                return -1;
+            }
+
+
+            return shader;
+        }else{
+            console.log("no shadertype or shader source")
         }
-
-
-        return shader;
     }
 
 //    function loadShader(gl, id) {
@@ -536,6 +540,7 @@ function getShaderSrc(id, type){
         currentChild = currentChild.nextSibling;
     }
 
+    return theSource
 }
 
 
@@ -566,7 +571,7 @@ function createDefaultShader(gl){
     gl.useProgram(shader.program);
 
     shader.handleVertexPosition = gl.getAttribLocation(shader.program, "aVertexPosition");
-    shader.handleMVP = gl.getUniformLocation(shaderProgram, "uMVP");
+    shader.handleMVP = gl.getUniformLocation(shader.program, "uMVP");
 
     gl.enableVertexAttribArray(shader.handleVertexPosition);
 
@@ -663,7 +668,7 @@ document.onkeydown = function(e){
     }
 
 
-    board.drawShapeAt(matrix, null, livePieceX, livePieceY);
+    board.drawShapeAt(testMatrix, null, livePieceX, livePieceY);
 };
 
 // ====================================================================================================
