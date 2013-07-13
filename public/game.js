@@ -40,9 +40,23 @@ var gameLogic = function(makeBlock, input, board) {
   });
 };
 
+var replayGameLogic = function(_, input, board) {
 
+    return Bacon.update(
+       undefined,
+       [input.ups],    Block.move( 0, 0, 3),
+       [input.downs],  Block.move( 0, 0, 1),
+       [input.lefts],  Block.move(-1, 0, 0),
+       [input.rights], Block.move( 1, 0, 0),
+       [input.ts],     Block.move( 0, 1, 0),
+       [input.space],  function(st) { return st.down(); },
+       [input.block],  function(st, block) {
+           return new BlockState(blocks[block], board);
+       }
+    ).filter(function(x) { return x !== undefined});
+}
 
-function tetris(drawing, input, makeBlock) {
+function tetris(drawing, input, makeBlock, gameL) {
   
   drawing.drawGameArea(w, h);
 
@@ -50,7 +64,7 @@ function tetris(drawing, input, makeBlock) {
   var blockList = new Bacon.Bus()
   
   
-  var g = gameLogic(makeBlock, input, board)
+  var g = gameL(makeBlock, input, board)
   g.onValue(function (block) { 
     if (block.isSet) 
       drawing.setBlock(block, board.set(block));
@@ -61,5 +75,6 @@ function tetris(drawing, input, makeBlock) {
     console.log('you dead');
   })
   
-  return g;
+  if (makeBlock)
+      return makeBlock.bus;
 };

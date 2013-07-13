@@ -113,6 +113,14 @@ function gameEvents(socket, otherId) {
     return bus;
 }
 
+function parseGEs(gameEvents) {
+    gameEvents.log('game events');
+    var inputs = inputsFromSocket(gameEvents);
+    var blocks = gameEvents.filter(hasKey('id'));
+    inputs.block = blocks.log('blocks').map('.block').log('mapped block') ;
+    return inputs;
+}
+
 function inputsFromSocket(gameEvents) {
     var input = gameEvents
         .filter(hasKey('keyEvent'))
@@ -162,15 +170,14 @@ socket.on('start', function(data) {
     if (!started) {
         started = true;
         var inputs = keyInputs();
-        var blocks = tetris(new Drawing($('#game1')), inputs, provideBlock(socket))
+        var blocks = tetris(new Drawing($('#game1')), inputs, provideBlock(socket), gameLogic)
         for (var k in inputs)
             inputs[k].map({keyEvent: k}).emit(socket, 'gameEvent');
     }
     var otherId = data[0];
     var events = gameEvents(socket, otherId)
-    var otherInput = inputsFromSocket(events)
-    tetris(new Drawing($('#game2')), 
-           otherInput, blocksFromSocket(events));
+    var replay = parseGEs(events);
+    tetris(new Drawing($('#game2')), replay, undefined, replayGameLogic);
 })
 
 socket.on('hosted', function(x) {
