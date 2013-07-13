@@ -37,7 +37,7 @@ var w = 10, h = 20;
 <script>
 
 var messages = [];
-var socket = io.connect('http://localhost:3700');
+var socket = io.connect('http://10.0.1.35:3700');
 var field = $("#field");
 var sendButton = $("#send");
 var content = $("#content");
@@ -139,14 +139,19 @@ function provideBlock(socket) {
 }
 
 function blocksFromSocket(gameEvents, callback) {
-    var block;
-    var first = true;
-    var blockEvents = gameEvents.filter(hasKey('id'))
+    var blockEvents = gameEvents.filter(hasKey('id')).delay(1000)
+    var buf = [];
+    blockEvents.onValue(function(x) {
+        buf.push(x.block);
+    });
+    
     return function() { 
+        if (buf.length > 0) 
+            return Bacon.once(blocks[buf.shift()]);
+
         return blockEvents.take(1).map(function(x) {
-            console.log('alkdsfjdsaf', x, blocks[x.block], x);
-            return blocks[x.block];
-        })
+            return blocks[buf.shift()];
+        });
     };
 }
 
