@@ -14,3 +14,10 @@
   .set {
     background-color: yellow;  
   }
+  #chat {
+      color: white;
+  }
+  body > div {
+      float: left;
+      margin-right: 2em;
+  }
