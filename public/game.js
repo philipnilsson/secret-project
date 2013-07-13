@@ -23,26 +23,28 @@ function tetris(drawing, input, makeBlock) {
   
   var game = function() {
    
-    var init = new BlockState(makeBlock(), board);
+    return makeBlock().flatMap(function(block) {
+      var init = new BlockState(block, board);
     
-    if (init.collides()) {
-      init.isSet = true;
-      return Bacon.once(init);
-    }
+      if (init.collides()) {
+        init.isSet = true;
+        return Bacon.once(init);
+      }
 
-    var block = Bacon.update(
-       init,
-       [input.ups],    Block.move( 0, 0, 3),
-       [input.downs],  Block.move( 0, 0, 1),
-       [input.lefts],  Block.move(-1, 0, 0),
-       [input.rights], Block.move( 1, 0, 0),
-       [input.ts],     Block.move( 0, 1, 0),
-       [input.space],  function(st) { return st.down(); }
-    );
+      var block = Bacon.update(
+         init,
+         [input.ups],    Block.move( 0, 0, 3),
+         [input.downs],  Block.move( 0, 0, 1),
+         [input.lefts],  Block.move(-1, 0, 0),
+         [input.rights], Block.move( 1, 0, 0),
+         [input.ts],     Block.move( 0, 1, 0),
+         [input.space],  function(st) { return st.down(); }
+      );
 
-    return block
-      .takeUntil(function(x) { return x.isSet; })
-      .flatMapEnd(game);
+      return block
+        .takeUntil(function(x) { return x.isSet; })
+        .flatMapEnd(game);
+    });
   };
   
   var g = game()

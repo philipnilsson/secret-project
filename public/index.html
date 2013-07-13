@@ -105,8 +105,10 @@ function gameEvents(socket, otherId) {
     socket.on('gameEvent', function(data) {
         buffer.push(data);
         buffer.sort(function(x) { return x.i })
-        while (buffer.length > 0 && buffer[0].i <= i)
+        while (buffer.length > 0 && buffer[0].i <= i) {
             bus.push(buffer.shift())
+            i++;
+        }
     });
     return bus;
 }
@@ -131,23 +133,21 @@ function provideBlock(socket) {
     bus.emit(socket, 'gameEvent');
     return function _provideBlock() {
       var randomBlock = Block.randomBlock()
-      console.log('randomBlcok', randomBlock);
       bus.push({ block: randomBlock, id: socketId });
-      return blocks[randomBlock];
+      return Bacon.once(blocks[randomBlock]);
     }
 }
 
 function blocksFromSocket(gameEvents, callback) {
     var block;
     var first = true;
-    var blocks = gameEvents.filter(hasKey('id'))
-    blocks.onValue(function(data) {
-        block = data.block;
-        if (first) 
-            callback (function() { return blocks[block]; })
-        first = false;
-    });
-    return function() { return block };
+    var blockEvents = gameEvents.filter(hasKey('id'))
+    return function() { 
+        return blockEvents.take(1).map(function(x) {
+            console.log('alkdsfjdsaf', x, blocks[x.block], x);
+            return blocks[x.block];
+        })
+    };
 }
 
 started = false;
@@ -162,10 +162,10 @@ socket.on('start', function(data) {
             inputs[k].map({keyEvent: k}).emit(socket, 'gameEvent');
     }
     var otherId = data[0];
-    var otherInput = inputsFromSocket(socket, otherId)
-    blocksFromSocket(socket, otherId, function(f) {
-        tetris(new Drawing($('#game2')), otherInput, f);
-    });
+    var events = gameEvents(socket, otherId)
+    var otherInput = inputsFromSocket(events)
+    tetris(new Drawing($('#game2')), 
+           otherInput, blocksFromSocket(events));
 })
 
 socket.on('hosted', function(x) {
