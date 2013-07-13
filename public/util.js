@@ -13,3 +13,12 @@ Bacon.Observable.prototype.emit = function(sockets, event) {
         sockets.emit(event, data);
     });
 }
+
+eventCounter = 0;
+Bacon.Observable.prototype.withCount = function() {
+    return this.map(function(x) {
+        x.i = eventCounter++;
+        console.log('client event', x);
+        return x;
+    });
+}

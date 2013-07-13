@@ -16,28 +16,50 @@ function keyInputs() {
 
 var gameLogic = function(makeBlock, input, board) {
  
-  return makeBlock().flatMap(function(block) {
-    var init = new BlockState(block, board);
+  var bk = window.blocks[Block.randomBlock()]
+  var block = new BlockState(bk, board);
+  var bus = new Bacon.Bus()
+  var blocks = new Bacon.Bus()
   
-    if (init.collides()) {
-      init.isSet = true;
-      return Bacon.once(init);
-    }
-
-    var block = Bacon.update(
-       init,
-       [input.ups],    Block.move( 0, 0, 3),
-       [input.downs],  Block.move( 0, 0, 1),
-       [input.lefts],  Block.move(-1, 0, 0),
-       [input.rights], Block.move( 1, 0, 0),
-       [input.ts],     Block.move( 0, 1, 0),
-       [input.space],  function(st) { return st.down(); }
-    );
-
-    return block
-      .takeUntil(function(x) { return x.isSet; })
-      .flatMapEnd(function () { return gameLogic(makeBlock, input, board) } );
+  bus.push(bk);
+  blocks.push(block);
+  
+  function send(x) {
+      bus.push(x);
+      if (block.collides()) 
+          block.isSet = true;
+      blocks.push(block);
+      if (block.collides()) {
+          bk = window.blocks[Block.randomBlock()]
+          block = new BlockState(bk, board);
+          bus.push(bk);
+          blocks.push(block);
+          if (block.collides()) {
+              blocks.end()
+              bus.end()
+          }
+      }
+  }
+  
+  function sendKey(x, y, rot, event) {
+      return function() {
+          block = Block.move(x, y, rot)(block);
+          send( {keyEvent: event })
+      }
+  }
+  
+  input.ups.onValue(sendKey(0, 0, 3, 'up'));
+  input.downs.onValue(sendKey(0, 0, 1, 'downs'));
+  input.lefts.onValue(sendKey(-1, 0, 0, 'lefts'));
+  input.rights.onValue(sendKey(1, 0, 0, 'rights'));
+  input.ts.onValue(sendKey(0, 1, 0, 'ts'));
+  
+  input.space.onValue(function() {
+      block = block.down();
+      send( {keyEvent: 'space' });
   });
+  
+  return blocks;
 };
 
 var replayGameLogic = function(_, input, board) {
@@ -61,13 +83,13 @@ function tetris(drawing, input, makeBlock, gameL) {
   drawing.drawGameArea(w, h);
 
   var board = new Board(10, 20);
-  var blockList = new Bacon.Bus()
-  
   
   var g = gameL(makeBlock, input, board)
   g.onValue(function (block) { 
-    if (block.isSet) 
+    console.log(block);
+    if (block.isSet) { 
       drawing.setBlock(block, board.set(block));
+    }
     drawing.drawBlock(block); 
   });
   
@@ -75,6 +97,5 @@ function tetris(drawing, input, makeBlock, gameL) {
     console.log('you dead');
   })
   
-  if (makeBlock)
-      return makeBlock.bus;
+  return g;
 };

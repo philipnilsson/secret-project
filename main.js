@@ -63,10 +63,8 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('message', data);
     });
 
-    var i = 0;
     socket.on('gameEvent', function(data) {
         var room = getRoom(socket);
-        data.i = i++;
         socket.broadcast.to(room).emit('gameEvent', data);
     })
 
