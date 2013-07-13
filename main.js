@@ -24,7 +24,7 @@ function leaveAll(socket) {
 }
 
 io.sockets.on('connection', function (socket) {
-    socket.emit('message', { message: 'welcome to the chat' });
+    socket.emit('message', { message: 'welcome to the chat', id: socket.id });
     socket.on('host', function() {
         leaveAll(socket);
         var room = socket.join('room' + ++roomNo);
@@ -34,35 +34,45 @@ io.sockets.on('connection', function (socket) {
         leaveAll(socket);
         socket.emit('rooms', io.sockets.manager.rooms)
     });
+    
+    function idsInRoom(room) {
+        return io.sockets.clients(room).map(function(x) {
+            return x.id;
+        })
+    }
+    
     socket.on('join', function(room) {
         if (room.indexOf('/') == 0)
             room = room.substring(1);
         socket.join(room);
-        var ids = io.sockets.clients(room).map(function(x) {
-            return x.id;
-        })
         io.sockets.in(room).emit('joined', {
-            players: ids
+            players: idsInRoom(room)
         });
     });
+    
+    function getRoom(socket) {
+        return io.sockets.manager.roomClients[socket.id][0];
+    }
+    
     socket.on('startGame', function() {
-        var room = io.sockets.manager.roomClients[socket.id][0];
-        io.sockets.in(room).emit('start');
+        var room = getRoom(socket);
+        io.sockets.in(room).emit('start', idsInRoom());
     });
     
     socket.on('send', function (data) {
         io.sockets.emit('message', data);
     });
+
+    function passthrough(event) {
+      socket.on(event, function (data) {
+          var room = getRoom(socket);
+          socket.broadcast.to(room).emit(event, socket.id)
+      })
+    }
+
+    ['ups', 'downs', 'lefts', 'rights', 'ts', 'space'].map(passthrough);
+
 });
-
-
-
-// Bacon.Observable.emit = function(sockets, event) {
-//     this.onValue(function(data) {
-//         sockets.emit(event, data);
-//     });
-// }
-
 
 console.log("Listening on port " + port);
 

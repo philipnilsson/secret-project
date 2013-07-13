@@ -42,8 +42,11 @@ var field = $("#field");
 var sendButton = $("#send");
 var content = $("#content");
 var name = $("#name");
+var socketId = undefined;
 
 socket.on('message', function(data) {
+  console.log(data.id);
+  socketId = data.id;
   $('#chat').append('<div>' + data.message + '</div>');
 })
 
@@ -91,8 +94,26 @@ socket.on('joined', function(data) {
   $gameRoom.append(start);
 });
 
+function inputsFromSocket(socket, otherId) {
+    function input(name) {
+        return Bacon.fromIO(socket, name).filter(function(id) {
+            return id === otherId;
+        })
+    }
+    return {
+        ups: input('ups'),
+        downs: input('downs'),
+        lefts: input('downs'),
+        rights: input('rights'),
+        ts: input('ts'),
+        space: input('spce')
+    }
+}
+
 started = false;
 socket.on('start', function(data) {
+    data = data.filter(function(id) { return id !== socketId })
+    console.log(data);
     $gameRoom.hide();
     if (!started) {
         started = true;
@@ -101,6 +122,10 @@ socket.on('start', function(data) {
         for (var k in inputs)
             inputs[k].emit(socket, k);
     }
+    var otherId = data[0];
+    var otherInput = inputsFromSocket(socket, otherId)
+    for (var s in otherInput)
+        otherInput[s].log('other ' + s);
 })
 
 socket.on('hosted', function(x) {
