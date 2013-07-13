@@ -1926,12 +1926,13 @@
     });
   };
 
-  Bacon.update = function() {
+Bacon.update = function() {
     var i, initial, lateBindFirst, patterns;
-
     initial = arguments[0], patterns = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
     lateBindFirst = function(f) {
-      return function(args) {
+      return function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
         return function(i) {
           return f.apply(null, [i].concat(args));
         };
