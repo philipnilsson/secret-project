@@ -8,6 +8,8 @@
 <script type="text/javascript" src="bacon.js"></script>
 <script type="text/javascript" src="drawing.js"></script>
 <script type="text/javascript" src="tetris.js"></script>
+<script type="text/javascript" src="game.js"></script>
+<script type="text/javascript" src="util.js"></script>
 
 <script type="text/javascript" src="socket.io/socket.io.js"></script>
 
@@ -15,71 +17,21 @@
   
 var w = 10, h = 20;
 
-function eq(x) {
-  return function(y) { return x === y; };
-}
-
-function keyInputs() {
-  var keys = $(document).asEventStream('keydown').map('.keyCode');
-  return {
-    ups: keys.filter(eq(38)),
-    lefts: keys.filter(eq(37)),
-    rights: keys.filter(eq(39)),
-    downs: keys.filter(eq(40)),
-    space: keys.filter(eq(32)),
-    ts: Bacon.interval(200)
-  }
-}
-
-  
-function tetris(drawing, input) {
-  
-  drawing.drawGameArea(w, h);
-
-  var board = new Board(10, 20);
-   
-  var game = function() {
-   
-    var init = new BlockState(Block.randomBlock(), board);
-    
-    if (init.collides()) {
-      init.isSet = true;
-      return Bacon.once(init);
-    }
-
-    var block = Bacon.update(
-       init,
-       [input.ups],    Block.move( 0, 0, 3),
-       [input.downs],  Block.move( 0, 0, 1),
-       [input.lefts],  Block.move(-1, 0, 0),
-       [input.rights], Block.move( 1, 0, 0),
-       [input.ts],     Block.move( 0, 1, 0),
-       [input.space],  function(st) { return st.down(); }
-    );
-
-    return block
-      .takeUntil(function(x) { return x.isSet; })
-      .flatMapEnd(game);
-  };
-  
-  var g = game()
-  g.onValue(function (block) { 
-    if (block.isSet) 
-      drawing.setBlock(block, board.set(block));
-    drawing.drawBlock(block); 
-  });
-  
-  g.onEnd(function() {
-    console.log('you dead');
-  })
-};
 
 </script>
 
 <body>
+  <div id="menu"> 
+    <button id="host"> New </button>
+    <button id="join"> Join </button>
+  </div>
+  <div id="waitingroom"> </div>
+  <div id="rooms"> </div>
+  
   <div id="game1"> </div> 
   <div id="game2"> </div> 
   <div id="chat"> </div>
+  
 </body>
 
 <script>
@@ -95,9 +47,72 @@ socket.on('message', function(data) {
   $('#chat').append('<div>' + data.message + '</div>');
 })
 
+$('#host').click(function() {
+  socket.emit('host');
+})
+
+$('#join').click(function() {
+  socket.emit('list rooms');
+})
+
+var $rooms = $('#rooms');
+var $gameRoom = $('#waitingroom');
+
+socket.on('rooms', function(x) {
+  $rooms.show();
+  $rooms.html('')
+  $gameRoom.hide();
+  var any = false;
+  for (var i in x) {
+    if(i.indexOf('/') >= 0) {
+      any = true;
+      room = $('<div>' + i + ', #players: ' + (x[i].length || 0) + ' <button class="join" data-room="' + i + '">Join</button></div>');
+      room.find('button').click(function(e) {
+          socket.emit('join', $(e.target).attr('data-room'))
+      });
+      $rooms.append(room)
+    }
+  }
+  if (!any)
+    $rooms.append('no games found')
+});
+
+socket.on('joined', function(data) {
+  $rooms.hide();
+  $gameRoom.show();
+  $gameRoom.html('');
+  for (var i in data.players) {
+      $gameRoom.append('<div>' + data.players[i] + '</div>')
+  }
+  var start = $('<button> Start </button>')
+  start.click(function() {
+      socket.emit('startGame')
+  });
+  $gameRoom.append(start);
+});
+
+started = false;
+socket.on('start', function(data) {
+    $gameRoom.hide();
+    if (!started) {
+        started = true;
+        var inputs = keyInputs();
+        var g = tetris(new Drawing($('#game1')), inputs)
+        for (var k in inputs)
+            inputs[k].emit(socket, k);
+    }
+})
+
+socket.on('hosted', function(x) {
+  $rooms.hide();
+  $gameRoom.show();
+  $gameRoom.html('');
+  $gameRoom.append('waiting for players');
+});
+ 
 $(function() {
-  tetris(new Drawing($('#game1')), keyInputs())
-  tetris(new Drawing($('#game2')), keyInputs())
+  // tetris(new Drawing($('#game1')), keyInputs())
+  // tetris(new Drawing($('#game2')), keyInputs())
 })
 
 </script>
