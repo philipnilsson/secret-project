@@ -21,7 +21,7 @@ var gameLogic = function(makeBlock, input, board) {
   var bus = new Bacon.Bus()
   var blocks = new Bacon.Bus()
   
-  bus.push(bk);
+  bus.push({block: bk});
   blocks.push(block);
   
   function send(x) {
@@ -32,7 +32,7 @@ var gameLogic = function(makeBlock, input, board) {
       if (block.collides()) {
           bk = window.blocks[Block.randomBlock()]
           block = new BlockState(bk, board);
-          bus.push(bk);
+          bus.push({block: bk});
           blocks.push(block);
           if (block.collides()) {
               blocks.end()
@@ -59,7 +59,7 @@ var gameLogic = function(makeBlock, input, board) {
       send( {keyEvent: 'space' });
   });
   
-  return blocks;
+  return { blocks: blocks, bus: bus };
 };
 
 var replayGameLogic = function(_, input, board) {
@@ -85,8 +85,7 @@ function tetris(drawing, input, makeBlock, gameL) {
   var board = new Board(10, 20);
   
   var g = gameL(makeBlock, input, board)
-  g.onValue(function (block) { 
-    console.log(block);
+  g.blocks.onValue(function (block) { 
     if (block.isSet) { 
       drawing.setBlock(block, board.set(block));
     }
@@ -97,5 +96,5 @@ function tetris(drawing, input, makeBlock, gameL) {
     console.log('you dead');
   })
   
-  return g;
+  return bus;
 };
