@@ -21,5 +21,20 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
+function fromIO(socket, event) {
+    return new Bacon.EventStream(function(sink) {
+        socket.on(event, function(data) {
+            sink(data);
+        });
+    });
+}
+
+Bacon.Observable.emit = function(sockets, event) {
+    this.onValue(function(data) {
+        sockets.emit(event, data);
+    });
+}
+
+
 console.log("Listening on port " + port);
 

@@ -15,39 +15,32 @@
   
 var w = 10, h = 20;
 
+function eq(x) {
+  return function(y) { return x === y; };
+}
+
 function keyInputs() {
   var keys = $(document).asEventStream('keydown').map('.keyCode');
   return {
-    ups: keys.filter(eq(38));
-    lefts: keys.filter(eq(37));
-    rights: keys.filter(eq(39));
-    downs: keys.filter(eq(40));
-    space: keys.filter(eq(32));
-    ts: Bacon.interval(200);
+    ups: keys.filter(eq(38)),
+    lefts: keys.filter(eq(37)),
+    rights: keys.filter(eq(39)),
+    downs: keys.filter(eq(40)),
+    space: keys.filter(eq(32)),
+    ts: Bacon.interval(200)
   }
 }
 
-function randomBlock() {
-  var ts = Object.keys(blocks);
-  return blocks[ts[Math.floor(Math.random() * ts.length)]];
-};
   
 function tetris(drawing, input) {
   
   drawing.drawGameArea(w, h);
 
-  var eq = function(x) { return function(y) { return x === y; }; };
-  
-
   var board = new Board(10, 20);
-  
-  var move = function(x,y,rot) { 
-    return function(st) { return st.tryMove(x,y,rot); };
-  };
    
   var game = function() {
    
-    var init = new BlockState(randomBlock(), board);
+    var init = new BlockState(Block.randomBlock(), board);
     
     if (init.collides()) {
       init.isSet = true;
@@ -56,11 +49,11 @@ function tetris(drawing, input) {
 
     var block = Bacon.update(
        init,
-       [input.ups],    move( 0, 0, 3),
-       [input.downs],  move( 0, 0, 1),
-       [input.lefts],  move(-1, 0, 0),
-       [input.rights], move( 1, 0, 0),
-       [input.ts],     move( 0, 1, 0),
+       [input.ups],    Block.move( 0, 0, 3),
+       [input.downs],  Block.move( 0, 0, 1),
+       [input.lefts],  Block.move(-1, 0, 0),
+       [input.rights], Block.move( 1, 0, 0),
+       [input.ts],     Block.move( 0, 1, 0),
        [input.space],  function(st) { return st.down(); }
     );
 
@@ -77,9 +70,10 @@ function tetris(drawing, input) {
   });
   
   g.onEnd(function() {
-    console.log('lol you dead');
+    console.log('you dead');
   })
 };
+
 </script>
 
 <body>
@@ -102,8 +96,8 @@ socket.on('message', function(data) {
 })
 
 $(function() {
-  tetris(new Drawing($('#game1', keyInputs())))
-  tetris(new Drawing($('#game2', keyInputs())))
+  tetris(new Drawing($('#game1')), keyInputs())
+  tetris(new Drawing($('#game2')), keyInputs())
 })
 
 </script>
