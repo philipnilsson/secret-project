@@ -45,8 +45,8 @@ var name = $("#name");
 var socketId = undefined;
 
 socket.on('message', function(data) {
-  console.log(data.id);
   socketId = data.id;
+  console.log('my socket id', socketId)
   $('#chat').append('<div>' + data.message + '</div>');
 })
 
@@ -94,38 +94,78 @@ socket.on('joined', function(data) {
   $gameRoom.append(start);
 });
 
-function inputsFromSocket(socket, otherId) {
-    function input(name) {
-        return Bacon.fromIO(socket, name).filter(function(id) {
-            return id === otherId;
-        })
-    }
+function hasKey(key) {
+    return function(obj) { return key in obj }
+}
+
+function gameEvents(socket, otherId) {
+    var bus = new Bacon.Bus();
+    var buffer = []
+    var i = 0;
+    socket.on('gameEvent', function(data) {
+        buffer.push(data);
+        buffer.sort(function(x) { return x.i })
+        while (buffer.length > 0 && buffer[0].i <= i)
+            bus.push(buffer.shift())
+    });
+    return bus;
+}
+
+function inputsFromSocket(gameEvents) {
+    var input = gameEvents
+        .filter(hasKey('keyEvent'))
+        .map('.keyEvent');
+
     return {
-        ups: input('ups'),
-        downs: input('downs'),
-        lefts: input('downs'),
-        rights: input('rights'),
-        ts: input('ts'),
-        space: input('spce')
+        ups: input.filter(eq('ups')),
+        downs: input.filter(eq('downs')),
+        lefts: input.filter(eq('lefts')),
+        rights: input.filter(eq('rights')),
+        ts: input.filter(eq('ts')),
+        space: input.filter(eq('space'))
     }
+}
+
+function provideBlock(socket) {
+    var bus = new Bacon.Bus()
+    bus.emit(socket, 'gameEvent');
+    return function _provideBlock() {
+      var randomBlock = Block.randomBlock()
+      console.log('randomBlcok', randomBlock);
+      bus.push({ block: randomBlock, id: socketId });
+      return blocks[randomBlock];
+    }
+}
+
+function blocksFromSocket(gameEvents, callback) {
+    var block;
+    var first = true;
+    var blocks = gameEvents.filter(hasKey('id'))
+    blocks.onValue(function(data) {
+        block = data.block;
+        if (first) 
+            callback (function() { return blocks[block]; })
+        first = false;
+    });
+    return function() { return block };
 }
 
 started = false;
 socket.on('start', function(data) {
     data = data.filter(function(id) { return id !== socketId })
-    console.log(data);
     $gameRoom.hide();
     if (!started) {
         started = true;
         var inputs = keyInputs();
-        var g = tetris(new Drawing($('#game1')), inputs)
+        var blocks = tetris(new Drawing($('#game1')), inputs, provideBlock(socket))
         for (var k in inputs)
-            inputs[k].emit(socket, k);
+            inputs[k].map({keyEvent: k}).emit(socket, 'gameEvent');
     }
     var otherId = data[0];
     var otherInput = inputsFromSocket(socket, otherId)
-    for (var s in otherInput)
-        otherInput[s].log('other ' + s);
+    blocksFromSocket(socket, otherId, function(f) {
+        tetris(new Drawing($('#game2')), otherInput, f);
+    });
 })
 
 socket.on('hosted', function(x) {
@@ -134,11 +174,6 @@ socket.on('hosted', function(x) {
   $gameRoom.html('');
   $gameRoom.append('waiting for players');
 });
- 
-$(function() {
-  // tetris(new Drawing($('#game1')), keyInputs())
-  // tetris(new Drawing($('#game2')), keyInputs())
-})
 
 </script>
 

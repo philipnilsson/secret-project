@@ -25,3 +25,6 @@
   .rooms {
       display: none;
   }
+  button {
+      padding: 2em;
+  }

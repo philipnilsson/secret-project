@@ -63,14 +63,12 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('message', data);
     });
 
-    function passthrough(event) {
-      socket.on(event, function (data) {
-          var room = getRoom(socket);
-          socket.broadcast.to(room).emit(event, socket.id)
-      })
-    }
-
-    ['ups', 'downs', 'lefts', 'rights', 'ts', 'space'].map(passthrough);
+    var i = 0;
+    socket.on('gameEvent', function(data) {
+        var room = getRoom(socket);
+        data.i = i++;
+        socket.broadcast.to(room).emit('gameEvent', data);
+    })
 
 });
 

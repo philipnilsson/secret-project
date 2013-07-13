@@ -87,7 +87,7 @@ Block.move = function(x,y,rot) {
 
 Block.randomBlock = function randomBlock() {
   var ts = Object.keys(blocks);
-  return blocks[ts[Math.floor(Math.random() * ts.length)]];
+  return ts[Math.floor(Math.random() * ts.length)];
 };
 
 function BlockState(block, board, rot, x, y, isSet) {

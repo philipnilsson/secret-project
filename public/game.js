@@ -14,16 +14,16 @@ function keyInputs() {
   }
 }
 
-  
-function tetris(drawing, input) {
+function tetris(drawing, input, makeBlock) {
   
   drawing.drawGameArea(w, h);
 
   var board = new Board(10, 20);
-   
+  var blockList = new Bacon.Bus()
+  
   var game = function() {
    
-    var init = new BlockState(Block.randomBlock(), board);
+    var init = new BlockState(makeBlock(), board);
     
     if (init.collides()) {
       init.isSet = true;
