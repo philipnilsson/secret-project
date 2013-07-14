@@ -135,16 +135,6 @@ function inputsFromSocket(gameEvents) {
     }
 }
 
-function provideBlock(socket) {
-    var bus = new Bacon.Bus()
-    bus.withCount().emit(socket, 'gameEvent');
-    return function _provideBlock() {
-      var randomBlock = Block.randomBlock()
-      bus.push({ block: randomBlock, id: socketId });
-      return Bacon.once(blocks[randomBlock]);
-    }
-}
-
 function blocksFromSocket(gameEvents, callback) {
     var blockEvents = gameEvents.filter(hasKey('id')).delay(1000)
     var buf = [];
@@ -169,14 +159,12 @@ socket.on('start', function(data) {
     if (!started) {
         started = true;
         var inputs = keyInputs();
-        var blocks = tetris(new Drawing($('#game1')), inputs, provideBlock(socket), gameLogic)
-        for (var k in inputs)
-            inputs[k].map({keyEvent: k}).withCount().emit(socket, 'gameEvent');
+        var events = tetris(new Drawing($('#game1')), inputs, gameLogic)
+        events.withMeta(socketId).emit(socket, 'gameEvent');
     }
     var otherId = data[0];
     var events = gameEvents(socket, otherId)
-    //var replay = parseGEs(events);
-    //tetris(new Drawing($('#game2')), replay, undefined, replayGameLogic);
+    tetris(new Drawing($('#game2')), events, replayGameLogic);
 })
 
 socket.on('hosted', function(x) {

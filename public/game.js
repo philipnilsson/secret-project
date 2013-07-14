@@ -14,24 +14,28 @@ function keyInputs() {
   }
 }
 
-var gameLogic = function(makeBlock, input, board) {
+var gameLogic = function(input, board) {
  
-  var bk = window.blocks[Block.randomBlock()]
-  var block = new BlockState(bk, board);
+  var bk = Block.randomBlock()
+  var block = new BlockState(window.blocks[bk], board);
   var bus = new Bacon.Bus()
   var blocks = new Bacon.Bus()
   
-  bus.push({block: bk});
-  blocks.push(block);
+  setTimeout(function() {
+      bus.push({block: bk});
+      blocks.push(block);
+  }, 0);
   
   function send(x) {
       bus.push(x);
-      if (block.collides()) 
+      if (block.collides()) {
           block.isSet = true;
+          bus.push({set: null})
+      }
       blocks.push(block);
       if (block.collides()) {
-          bk = window.blocks[Block.randomBlock()]
-          block = new BlockState(bk, board);
+          bk = Block.randomBlock()
+          block = new BlockState(window.blocks[bk], board);
           bus.push({block: bk});
           blocks.push(block);
           if (block.collides()) {
@@ -48,7 +52,7 @@ var gameLogic = function(makeBlock, input, board) {
       }
   }
   
-  input.ups.onValue(sendKey(0, 0, 3, 'up'));
+  input.ups.onValue(sendKey(0, 0, 3, 'ups'));
   input.downs.onValue(sendKey(0, 0, 1, 'downs'));
   input.lefts.onValue(sendKey(-1, 0, 0, 'lefts'));
   input.rights.onValue(sendKey(1, 0, 0, 'rights'));
@@ -62,29 +66,45 @@ var gameLogic = function(makeBlock, input, board) {
   return { blocks: blocks, bus: bus };
 };
 
-var replayGameLogic = function(_, input, board) {
-
-    return Bacon.update(
-       undefined,
-       [input.ups],    Block.move( 0, 0, 3),
-       [input.downs],  Block.move( 0, 0, 1),
-       [input.lefts],  Block.move(-1, 0, 0),
-       [input.rights], Block.move( 1, 0, 0),
-       [input.ts],     Block.move( 0, 1, 0),
-       [input.space],  function(st) { return st.down(); },
-       [input.block],  function(st, block) {
-           return new BlockState(blocks[block], board);
-       }
-    ).filter(function(x) { return x !== undefined});
+var replayGameLogic = function(bus, board) {
+    var blocks = new Bacon.Bus();
+    var block;
+    
+    bus.onValue(function(val) {
+        if (val.set) {
+            block.isSet = true;
+        }
+        else if (val.block) {
+            block = new BlockState(window.blocks[val.block], board);
+        }
+        else if (val.keyEvent) {
+            var e = val.keyEvent;
+            if (e == 'ups') 
+                block = Block.move(0, 0, 3)(block);
+            else if (e === 'downs')
+                block = Block.move(0, 0, 1)(block);
+            else if (e === 'lefts')
+                block = Block.move(-1, 0, 0)(block);
+            else if (e === 'rights')
+                block = Block.move(1, 0, 0)(block);
+            else if (e === 'ts')
+                block = Block.move(0, 1, 0)(block);
+            else if (e === 'space')
+                block = block.down()
+        }
+        blocks.push(block);
+    });
+    
+    return { blocks: blocks }
 }
 
-function tetris(drawing, input, makeBlock, gameL) {
+function tetris(drawing, input, gameL) {
   
   drawing.drawGameArea(w, h);
 
   var board = new Board(10, 20);
   
-  var g = gameL(makeBlock, input, board)
+  var g = gameL(input, board)
   g.blocks.onValue(function (block) { 
     if (block.isSet) { 
       drawing.setBlock(block, board.set(block));
@@ -92,9 +112,9 @@ function tetris(drawing, input, makeBlock, gameL) {
     drawing.drawBlock(block); 
   });
   
-  g.onEnd(function() {
+  g.blocks.onEnd(function() {
     console.log('you dead');
   })
   
-  return bus;
+  return g.bus;
 };

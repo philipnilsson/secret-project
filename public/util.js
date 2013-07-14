@@ -15,9 +15,10 @@ Bacon.Observable.prototype.emit = function(sockets, event) {
 }
 
 eventCounter = 0;
-Bacon.Observable.prototype.withCount = function() {
+Bacon.Observable.prototype.withMeta = function(id) {
     return this.map(function(x) {
         x.i = eventCounter++;
+        x.id = id;
         return x;
     });
 }
