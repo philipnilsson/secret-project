@@ -22,3 +22,7 @@ Bacon.Observable.prototype.withMeta = function(id) {
         return x;
     });
 }
+
+Bacon.Observable.prototype.takeWhile = function(obs) {
+    return this.takeUntil(obs.filter(false).mapEnd(true))
+}

@@ -199,29 +199,3 @@ for (var type in blocks) {
         blocks[type].y,
         blocks[type].rot);
 }
-
-Bacon.Observable.prototype.takeUntil = function(f) {
-    return this.withHandler(function(event) {
-        if (!event.filter(f))
-            return this.push(event);
-        else {
-            this.push(event);
-            this.push(new Bacon.End());
-            return Bacon.noMore;
-        }
-    });
-};
-
-Bacon.Observable.prototype.flatMapEnd = function(cont) {
-    var self = this;
-    return new Bacon.EventStream(function(sink) {
-        var unsub = self.subscribe(function(e) {
-            if (e.isEnd())
-                unsub = cont().subscribe(sink);
-            else
-                sink(e);
-        });
-        return function() { unsub(); };
-    });
-};
-
