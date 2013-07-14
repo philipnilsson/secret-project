@@ -22,10 +22,6 @@ var gameLogic = function(input, board) {
   var block = new BlockState(window.blocks[bk], board);
   var bus = new Bacon.Bus()
   
-  setTimeout(function() {
-      bus.push({block: bk});
-  }, 0);
-  
   function send(x) {
       bus.push(x);
       if (block.collides()) {
@@ -47,7 +43,7 @@ var gameLogic = function(input, board) {
       send({ keyEvent: dir });
   })
   
-  return bus;
+  return bus.toProperty({block: bk});
 };
 
 var replayGameLogic = function(bus, board) {
