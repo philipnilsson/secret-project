@@ -13,7 +13,7 @@ function keyInputs() {
           case 32: return Bacon.once('space');
           default: Bacon.never();
       }
-  }).merge(Bacon.interval(200).map('ts')).log('key events');
+  }).merge(Bacon.interval(200).map('ts'));
 }
 
 var gameLogic = function(input, board) {
@@ -27,14 +27,11 @@ var gameLogic = function(input, board) {
       if (block.collides()) {
           block.isSet = true;
           bus.push({set: null})
-      }
-      if (block.collides()) {
           bk = Block.randomBlock()
           block = new BlockState(window.blocks[bk], board);
           bus.push({block: bk});
-          if (block.collides()) {
+          if (block.collides()) 
               bus.end()
-          }
       }
   }
   
@@ -50,13 +47,16 @@ var replayGameLogic = function(bus, board) {
     var blocks = new Bacon.Bus();
     var block;
     bus.onValue(function(val) {
-        if (val.keyEvent) 
+        if (val.keyEvent) {
             block = Block.moveDir(val.keyEvent, block);
+            blocks.push(block);
+        }
         else if (val.set) 
             block.isSet = true;
-        else if (val.block) 
+        else if (val.block) {
             block = new BlockState(window.blocks[val.block], board);
-        blocks.push(block);
+            blocks.push(block);
+        }
     });
     
     return blocks
@@ -76,6 +76,7 @@ function tetris(drawing, input, replay) {
   
   g.onValue(function (block) { 
     if (block.isSet) { 
+      console.log('here!')
       drawing.setBlock(block, board.set(block));
     }
     drawing.drawBlock(block); 

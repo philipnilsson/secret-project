@@ -23,23 +23,29 @@ function leaveAll(socket) {
     }
 }
 
+function idsInRoom(room) {
+    return io.sockets.clients(room).map(function(x) {
+        return x.id;
+    })
+}
+
+function getRoom(socket) {
+    return io.sockets.manager.roomClients[socket.id][0];
+}
+
 io.sockets.on('connection', function (socket) {
     socket.emit('message', { message: 'welcome to the chat', id: socket.id });
+    
     socket.on('host', function() {
         leaveAll(socket);
         var room = socket.join('room' + ++roomNo);
         socket.emit('hosted', io.sockets.clients(room));
     });
+    
     socket.on('list rooms', function () { 
         leaveAll(socket);
         socket.emit('rooms', io.sockets.manager.rooms)
     });
-    
-    function idsInRoom(room) {
-        return io.sockets.clients(room).map(function(x) {
-            return x.id;
-        })
-    }
     
     socket.on('join', function(room) {
         if (room.indexOf('/') == 0)
@@ -49,10 +55,6 @@ io.sockets.on('connection', function (socket) {
             players: idsInRoom(room)
         });
     });
-    
-    function getRoom(socket) {
-        return io.sockets.manager.roomClients[socket.id][0];
-    }
     
     socket.on('startGame', function() {
         var room = getRoom(socket);
@@ -66,7 +68,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('gameEvent', function(data) {
         var room = getRoom(socket);
         socket.broadcast.to(room).emit('gameEvent', data);
-    })
+    });
 
 });
 
