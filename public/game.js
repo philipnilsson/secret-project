@@ -4,14 +4,16 @@ function eq(x) {
 
 function keyInputs() {
   var keys = $(document).asEventStream('keydown').map('.keyCode');
-  return {
-    ups: keys.filter(eq(38)),
-    lefts: keys.filter(eq(37)),
-    rights: keys.filter(eq(39)),
-    downs: keys.filter(eq(40)),
-    space: keys.filter(eq(32)),
-    ts: Bacon.interval(200)
-  }
+  return keys.flatMap(function(code) {
+      switch(code) {
+          case 38: return Bacon.once('up');
+          case 37: return Bacon.once('left');
+          case 39: return Bacon.once('right');
+          case 40: return Bacon.once('down');
+          case 32: return Bacon.once('space');
+          default: Bacon.never();
+      }
+  }).merge(Bacon.interval(200).map('ts')).log('key events');
 }
 
 var gameLogic = function(input, board) {
@@ -40,23 +42,10 @@ var gameLogic = function(input, board) {
       }
   }
   
-  function sendKey(x, y, rot, event) {
-      return function() {
-          block = Block.move(x, y, rot)(block);
-          send( {keyEvent: event })
-      }
-  }
-  
-  input.ups.onValue(sendKey(0, 0, 3, 'up'));
-  input.downs.onValue(sendKey(0, 0, 1, 'down'));
-  input.lefts.onValue(sendKey(-1, 0, 0, 'left'));
-  input.rights.onValue(sendKey(1, 0, 0, 'right'));
-  input.ts.onValue(sendKey(0, 1, 0, 'ts'));
-  
-  input.space.onValue(function() {
-      block = block.down();
-      send( {keyEvent: 'space' });
-  });
+  input.onValue(function(dir) {
+      block = Block.moveDir(dir, block);
+      send({ keyEvent: dir });
+  })
   
   return bus;
 };
@@ -64,18 +53,13 @@ var gameLogic = function(input, board) {
 var replayGameLogic = function(bus, board) {
     var blocks = new Bacon.Bus();
     var block;
-    
     bus.onValue(function(val) {
-        if (val.set) {
+        if (val.keyEvent) 
+            block = Block.moveDir(val.keyEvent, block);
+        else if (val.set) 
             block.isSet = true;
-        }
-        else if (val.block) {
+        else if (val.block) 
             block = new BlockState(window.blocks[val.block], board);
-        }
-        else if (val.keyEvent) {
-            var e = val.keyEvent;
-            block = Block.moveDir(e, block);
-        }
         blocks.push(block);
     });
     
