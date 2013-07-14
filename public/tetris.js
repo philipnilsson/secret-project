@@ -85,6 +85,21 @@ Block.move = function(x,y,rot) {
   return function(st) { return st.tryMove(x,y,rot); };
 };
 
+Block.moveDir = function(dir, block) {
+    if (dir == 'up')
+        return Block.move(0, 0, 3)(block);
+    else if (dir == 'down')
+        return Block.move(0, 0, 1)(block);
+    else if (dir === 'left')
+        return Block.move(-1, 0, 0)(block);
+    else if (dir === 'right')
+        return Block.move(1, 0, 0)(block);
+    else if (dir === 'ts')
+        return Block.move(0, 1, 0)(block);
+    else if (dir === 'space')
+        return block.down()
+}    
+
 Block.randomBlock = function randomBlock() {
   var ts = Object.keys(blocks);
   return ts[Math.floor(Math.random() * ts.length)];

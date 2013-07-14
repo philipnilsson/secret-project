@@ -19,11 +19,9 @@ var gameLogic = function(input, board) {
   var bk = Block.randomBlock()
   var block = new BlockState(window.blocks[bk], board);
   var bus = new Bacon.Bus()
-  var blocks = new Bacon.Bus()
   
   setTimeout(function() {
       bus.push({block: bk});
-      blocks.push(block);
   }, 0);
   
   function send(x) {
@@ -32,14 +30,11 @@ var gameLogic = function(input, board) {
           block.isSet = true;
           bus.push({set: null})
       }
-      blocks.push(block);
       if (block.collides()) {
           bk = Block.randomBlock()
           block = new BlockState(window.blocks[bk], board);
           bus.push({block: bk});
-          blocks.push(block);
           if (block.collides()) {
-              blocks.end()
               bus.end()
           }
       }
@@ -52,10 +47,10 @@ var gameLogic = function(input, board) {
       }
   }
   
-  input.ups.onValue(sendKey(0, 0, 3, 'ups'));
-  input.downs.onValue(sendKey(0, 0, 1, 'downs'));
-  input.lefts.onValue(sendKey(-1, 0, 0, 'lefts'));
-  input.rights.onValue(sendKey(1, 0, 0, 'rights'));
+  input.ups.onValue(sendKey(0, 0, 3, 'up'));
+  input.downs.onValue(sendKey(0, 0, 1, 'down'));
+  input.lefts.onValue(sendKey(-1, 0, 0, 'left'));
+  input.rights.onValue(sendKey(1, 0, 0, 'right'));
   input.ts.onValue(sendKey(0, 1, 0, 'ts'));
   
   input.space.onValue(function() {
@@ -79,18 +74,7 @@ var replayGameLogic = function(bus, board) {
         }
         else if (val.keyEvent) {
             var e = val.keyEvent;
-            if (e == 'ups') 
-                block = Block.move(0, 0, 3)(block);
-            else if (e === 'downs')
-                block = Block.move(0, 0, 1)(block);
-            else if (e === 'lefts')
-                block = Block.move(-1, 0, 0)(block);
-            else if (e === 'rights')
-                block = Block.move(1, 0, 0)(block);
-            else if (e === 'ts')
-                block = Block.move(0, 1, 0)(block);
-            else if (e === 'space')
-                block = block.down()
+            block = Block.moveDir(e, block);
         }
         blocks.push(block);
     });
