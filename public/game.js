@@ -63,7 +63,7 @@ var gameLogic = function(input, board) {
       send( {keyEvent: 'space' });
   });
   
-  return { blocks: blocks, bus: bus };
+  return bus;
 };
 
 var replayGameLogic = function(bus, board) {
@@ -95,26 +95,31 @@ var replayGameLogic = function(bus, board) {
         blocks.push(block);
     });
     
-    return { blocks: blocks }
+    return blocks
 }
 
-function tetris(drawing, input, gameL) {
+function tetris(drawing, input, replay) {
   
   drawing.drawGameArea(w, h);
 
   var board = new Board(10, 20);
   
-  var g = gameL(input, board)
-  g.blocks.onValue(function (block) { 
+  if (!replay)
+      bus = gameLogic(input, board);
+  else
+      bus = input;
+  var g = replayGameLogic(bus, board);
+  
+  g.onValue(function (block) { 
     if (block.isSet) { 
       drawing.setBlock(block, board.set(block));
     }
     drawing.drawBlock(block); 
   });
   
-  g.blocks.onEnd(function() {
+  g.onEnd(function() {
     console.log('you dead');
   })
   
-  return g.bus;
+  return bus;
 };

@@ -159,12 +159,12 @@ socket.on('start', function(data) {
     if (!started) {
         started = true;
         var inputs = keyInputs();
-        var events = tetris(new Drawing($('#game1')), inputs, gameLogic)
+        var events = tetris(new Drawing($('#game1')), inputs, false)
         events.withMeta(socketId).emit(socket, 'gameEvent');
     }
     var otherId = data[0];
     var events = gameEvents(socket, otherId)
-    tetris(new Drawing($('#game2')), events, replayGameLogic);
+    tetris(new Drawing($('#game2')), events, true);
 })
 
 socket.on('hosted', function(x) {
