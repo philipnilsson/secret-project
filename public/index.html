@@ -22,6 +22,7 @@ var w = 10, h = 20;
 
 <body>
   <div id="menu"> 
+    <button id="single"> Single-player </button>
     <button id="host"> New </button>
     <button id="join"> Join </button>
   </div>
@@ -151,6 +152,14 @@ function blocksFromSocket(gameEvents, callback) {
         });
     };
 }
+
+
+$('#single').on('click', function() {
+    $gameRoom.hide();
+    $('button').hide();
+    var inputs = keyInputs();
+    tetris(new Drawing($('#game1')), inputs, false);
+});
 
 started = false;
 socket.on('start', function(data) {
