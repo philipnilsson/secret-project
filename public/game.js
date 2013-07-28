@@ -73,11 +73,12 @@ function tetris(drawing, input, replay) {
       score += res.lines.length;
       drawing.drawScore(score);
       drawing.setBlock(block, res.lines);
-      if (res.special) {
-        drawing.drawSpecial(res.special);
+      if (res.special.length) {
+        for (var i in res.special)
+          drawing.drawSpecial(res.special[i]);
       }
       if (res.powerups.length > 0) {
-        drawing.addPowerUps(powerups);
+        drawing.addPowerUps(res.powerups);
       }
     }
     drawing.drawBlock(block); 

@@ -171,7 +171,7 @@ function Board(w, h) {
 
   this.set = function (st) {
     var lines = [];
-    var res = { lines: lines, powerups: [] };
+    var res = { lines: lines, powerups: [], special: [] };
     
     for (var i = 0; i < 5; i++)
       for (var j = 0; j < 5; j++)
@@ -189,7 +189,7 @@ function Board(w, h) {
     while (self.arr.length < self.h)
       self.arr.unshift(new Array(self.w));
     
-    if (lines.length > 0) {
+    for (var ___ in lines) {
       var n = 0;
       for (var i = 0; i < self.h; i++) 
       for (var j = 0; j < self.w; j++) 
@@ -202,7 +202,7 @@ function Board(w, h) {
           r--;
           if (r == 0) {
             self.arr[i][j] = { special: '!' }
-            res.special = {i:i, j:j}
+            res.special.push({i:i, j:j})
           }
         }
     }

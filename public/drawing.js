@@ -11,7 +11,7 @@ function Drawing($game) {
 
     this.addPowerUps = function addPowerUps(powerups) {
       for (var i in powerups) {
-        self.$powerups.append('<div>' + powerups[i] + '</div>');
+        self.$powerups.append('<div class="powerup">' + powerups[i] + '</div>');
       }
     }
 
@@ -21,6 +21,7 @@ function Drawing($game) {
         self.$rows = $('<div class="rows"> </div>')
         $game.append(self.$score)
         $game.append(self.$rows)
+        $game.append(self.$powerups)
         for (var i = 0; i < h; i++) {
             self.$rows.append(makeRow(i));
         }
