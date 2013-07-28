@@ -37,6 +37,13 @@ var w = 10, h = 20;
 
 <script>
 
+$('#single').on('click', function() {
+//    $gameRoom.hide();
+    $('button').hide();
+    var inputs = keyInputs();
+    tetris(new Drawing($('#game1')), inputs, false);
+});
+
 var messages = [];
 var socket = io.connect('http://192.168.43.47:3700');
 var field = $("#field");
@@ -153,13 +160,6 @@ function blocksFromSocket(gameEvents, callback) {
     };
 }
 
-
-$('#single').on('click', function() {
-    $gameRoom.hide();
-    $('button').hide();
-    var inputs = keyInputs();
-    tetris(new Drawing($('#game1')), inputs, false);
-});
 
 started = false;
 socket.on('start', function(data) {
