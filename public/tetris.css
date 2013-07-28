@@ -28,3 +28,7 @@
   button {
       padding: 2em;
   }
+
+  .special {
+      background-color: blue !important;
+  }

@@ -1,5 +1,7 @@
 function Drawing($game) {
 
+    var self = this;
+    
     function makeRow(i) {
         var row = $('<div/>').addClass('row');
         for (var j = 0; j < w; j++) 
@@ -7,10 +9,20 @@ function Drawing($game) {
         return row;
     }  
 
+    this.addPowerUps = function addPowerUps(powerups) {
+      for (var i in powerups) {
+        self.$powerups.append('<div>' + powerups[i] + '</div>');
+      }
+    }
+
     this.drawGameArea = function drawGameArea(w, h) {
-        var game = $game;
+        self.$score = $('<div class="score"> 0 </div>')
+        self.$powerups = $('<div class="powerups"> </div>')
+        self.$rows = $('<div class="rows"> </div>')
+        $game.append(self.$score)
+        $game.append(self.$rows)
         for (var i = 0; i < h; i++) {
-            game.append(makeRow(i));
+            self.$rows.append(makeRow(i));
         }
     };
 
@@ -18,12 +30,12 @@ function Drawing($game) {
         for (var i = 0; i < 5; i++)
             for (var j = 0; j < 5; j++) {
                 if(st.block.get(i, j, st.rot))
-                    $game.find('.row').eq(i + st.y).find('.cell').eq(j + st.x).addClass(klass);
+                    self.$rows.find('.row').eq(i + st.y).find('.cell').eq(j + st.x).addClass(klass);
             }
     }
 
     this.drawBlock = function drawBlock(st) {
-        $game.find('.cell').removeClass('active');
+        self.$rows.find('.cell').removeClass('active');
         setBlockClass(st, 'active');
     };
 
@@ -31,8 +43,16 @@ function Drawing($game) {
         setBlockClass(st, 'set');
         var n = lines.length;
         for (var i = 0; i < n; i++) 
-            $game.find('.row').eq(lines[i]).remove();
+            self.$rows.find('.row').eq(lines[i]).remove();
         for (i = 0; i < n; i++)
-            $game.prepend(makeRow(0));
+            self.$rows.prepend(makeRow(0));
+    };
+    
+    this.drawScore = function drawScore(score) {
+      self.$score.html(score)
+    };
+  
+    this.drawSpecial = function drawSpecial(res) {
+      self.$rows.find('.row').eq(res.i).find('.cell').eq(res.j).addClass('special');
     };
 }
