@@ -26,11 +26,11 @@ var gameLogic = function(input, board) {
     block = Block.moveDir(dir, block);
     bus.push({keyEvent: dir});
     if (block.isSet) {
-      bk = Block.randomBlock()
+      bk = Block.randomBlock();
       block = new BlockState(window.blocks[bk], board);
       bus.push({block: bk});
       if (block.collides()) 
-        bus.end()
+        bus.end();
     }
   });
   
