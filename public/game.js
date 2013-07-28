@@ -20,14 +20,12 @@ var gameLogic = function(input, board) {
     
     var bk = Block.randomBlock()
     var block = new BlockState(window.blocks[bk], board);
-    var bus = new Bacon.Bus()
+    var bus   = new Bacon.Bus()
     
     input.takeWhile(bus).onValue(function (dir) {
         block = Block.moveDir(dir, block);
         bus.push({keyEvent: dir});
-        if (block.collides()) {
-            block.isSet = true;
-            bus.push({settle: {}})
+        if (block.isSet) {
             bk = Block.randomBlock()
             block = new BlockState(window.blocks[bk], board);
             bus.push({block: bk});
@@ -47,8 +45,6 @@ var replayGameLogic = function(bus, board) {
             block = Block.moveDir(val.keyEvent, block);
             blocks.push(block);
         }
-        else if (val.settle) 
-            block.isSet = true;
         else if (val.block) {
             block = new BlockState(window.blocks[val.block], board);
             blocks.push(block);
