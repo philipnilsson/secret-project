@@ -71,4 +71,16 @@ function Drawing($game) {
 
         board.draw();
     }
+
+    this.addPowerUps = function addPowerUps(powerups) {
+        // TODO
+    }
+
+    this.drawScore = function drawScore(score) {
+        // TODO 
+    };
+  
+    this.drawSpecial = function drawSpecial(res) {
+      // TODO
+    };
 };
