@@ -22,7 +22,11 @@ var gameLogic = function(input, board) {
   var block = new BlockState(window.blocks[bk], board);
   var bus   = new Bacon.Bus()
   
-  input.takeWhile(bus).onValue(function (dir) {
+  var paused = $(document).asEventStream('keydown').filter(function(ev) {
+    return ev.keyCode == 80;
+  }).scan(true, function(x) { return !x })
+  
+  input.filter(paused).takeWhile(bus).onValue(function (dir) {
     block = Block.moveDir(dir, block);
     bus.push({keyEvent: dir});
     if (block.isSet) {

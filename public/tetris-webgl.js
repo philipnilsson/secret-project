@@ -177,7 +177,7 @@ function TetrisBoard(renderer) {
                 break;
             }
         }
-
+        console.log(foundBlock);
         startAnimation(foundBlock, [0, 0, 0.8, 1]);
     }
 
