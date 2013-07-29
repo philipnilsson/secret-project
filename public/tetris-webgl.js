@@ -19,6 +19,13 @@ function GLSquare(gl) {
     }
 }
 
+function interpolate(v1, v2, alpha) {
+  var res = [];
+  for (var i = 0; i < v1.length; i++)
+    res.push(v1[i] - alpha*(v1[i] - v2[i]));
+  return res;
+}
+
 function TetrisBoard(renderer) {
     var self = this;
     this.renderer = renderer;
@@ -51,8 +58,6 @@ function TetrisBoard(renderer) {
         setInterval(self.draw, interval);
     }
 
-    var animationId;
-
     function startAnimation(block, toColor) {
         var start = new Date().getTime();
         // time as parameter
@@ -67,15 +72,14 @@ function TetrisBoard(renderer) {
     function animateFoundBlock(block, start, end, startColor, endColor) {
 
         var anim = this;
+        var totalTime = end - start;
         this.animate = function() {
           
           var current = new Date().getTime();
-          var ds = (current - start) / (end - start);
+          var ds = (current - start) / totalTime;
           
-          if(current < end) {
-              block.color[0] = startColor[0] - ds*(startColor[0] - endColor[0]);
-              block.color[1] = startColor[1] - ds*(startColor[1] - endColor[1]);
-              block.color[2] = startColor[2] - ds*(startColor[2] - endColor[2]);
+          if (current < end) {
+              block.color = interpolate(startColor, endColor, ds);
               self.draw();
           } else {
               block.color = endColor;
@@ -83,7 +87,6 @@ function TetrisBoard(renderer) {
           }
         }
     }
-
 
     this.setBlock = function setBlock(matrix, x, y) {
         self.liveBlocks = [];
@@ -207,8 +210,6 @@ function TetrisBoard(renderer) {
             this.y -= dy;
         }
     }
-
-
 }
 
 
