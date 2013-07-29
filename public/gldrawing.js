@@ -74,6 +74,7 @@ function Drawing($game) {
     }
 
     this.addPowerUps = function addPowerUps(powerups) {
+        console.log("power ups: " + powerups);
         // TODO
     }
 
@@ -82,6 +83,10 @@ function Drawing($game) {
     };
   
     this.drawSpecial = function drawSpecial(res) {
+        console.log("draw special: " + res);
+        board.updateBlock(res.j, res.i);
+
+        board.draw();
       // TODO
     };
 };

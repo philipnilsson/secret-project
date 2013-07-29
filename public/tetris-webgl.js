@@ -39,7 +39,7 @@ function TetrisBoard(renderer) {
     }
 
     this.draw = function draw() {
-        console.log('draw')
+        // console.log('draw')
         var allBlocks = self.liveBlocks.concat(self.setBlocks)
         self.renderer.draw(allBlocks);
 
@@ -49,6 +49,42 @@ function TetrisBoard(renderer) {
     this.renderWithInterval = function renderWithInterval(interval) {
         if(interval == undefined) interval = 15;
         setInterval(self.draw, interval);
+    }
+
+    var animationId;
+
+    function startAnimation(block, toColor) {
+        var start = new Date().getTime();
+        // time as parameter
+        var end = start + 500;
+        var startColor = block.color;
+        var endColor = toColor;
+
+        animationId = setInterval( function() { animateFoundBlock(block, start, end, startColor, endColor); }, 15);   
+    }
+
+    function animateFoundBlock(block, start, end, startColor, endColor) {
+        var current = new Date().getTime();
+
+        var ds = (current - end) / (end - start);
+        ds += 1;
+
+        console.log("ds: " + ds);
+
+        if(current < end) {
+            block.color[0] = startColor[0] + ds * (endColor[0] - startColor[0]);
+            block.color[1] = startColor[1] + ds * (endColor[1] - startColor[1]);
+            block.color[2] = startColor[2] + ds * (endColor[2] - startColor[2]);
+
+            self.draw();
+        } else {
+            block.color = endColor;
+
+            clearInterval(animationId);
+
+            console.log("animation stop");
+
+        }
     }
 
 
@@ -128,6 +164,24 @@ function TetrisBoard(renderer) {
             }
         }
     }
+
+    this.updateBlock = function updateBlock(x, y) {
+        console.log("update block x: " +  x + " y: " + y);
+
+        var foundBlock = undefined;
+
+        for(var i=0; i<self.setBlocks.length; i++) {
+            var block = self.setBlocks[i];
+            if(block.x == x && block.y == y) {
+                foundBlock = block;
+                break;
+            }
+        }
+
+        startAnimation(foundBlock, [0, 0, 0.8, 1]);
+    }
+
+    
 
     function TetrisBaseElement(type, x, y) {
         this.type = type;
