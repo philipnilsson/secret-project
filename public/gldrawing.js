@@ -7,8 +7,9 @@ function Drawing($game) {
         
         var canvas = $game.find(".glCanvas").get(0);
         var gl = this.gl = canvas.getContext("webgl");
+        var renderer = new WebGLRenderer(gl);
 
-        board = new TetrisBoard(new WebGLRenderer(gl));
+        board = new TetrisBoard(renderer);
 
         board.init();
     };

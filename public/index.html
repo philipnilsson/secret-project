@@ -2,7 +2,7 @@
 
 <head> <title> Tetris! </title>
 
-    <script src="glMatrix-0.9.5.min.js"></script>
+    <script src="gl/glMatrix-0.9.5.min.js"></script>
     <script src="gl/shader-factory.js"></script>
     <script src="gl/renderer.js"></script>
     <script src="tetris-webgl.js"></script>
@@ -23,9 +23,9 @@
 
      <!-- Fragment shader set piece -->
     <script id="shader-fs-any-color" type="x-shader/x-fragment">
-        uniform vec4 block_color;
+        uniform highp vec4 uBlockColor;
         void main(void) {
-            gl_FragColor = block_color;
+            gl_FragColor = uBlockColor;
         }
     </script>
 

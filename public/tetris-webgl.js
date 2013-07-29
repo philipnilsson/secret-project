@@ -6,6 +6,8 @@ function GLSquare(gl) {
 
     this.indexBuffer  = -1;
     this.vertexBuffer = -1;
+    this.color = [1, 1, 1, 1]
+
 
     this.bind = function bind() {
         gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
@@ -17,144 +19,6 @@ function GLSquare(gl) {
     }
 }
 
-
-function WebGLRenderer(gl) {
-    var self = this;
-    this.gl = gl;
-
-    this.clearColor = [0.0, 0.0, 0.0, 1.0];
-
-    this.camera = {
-        eye    : [0, 0, 1],
-        center : [0, 0, 0],
-        up     : [0, 1, 0]
-    }
-
-    this.glSquare = new GLSquare(gl);
-
-    this.matrixM   = mat4.create();
-    this.matrixV   = mat4.create();
-    this.matrixP   = mat4.create();
-    this.matrixMVP = mat4.create();
-
-    //TODO remove hard coding grid and rather set it
-    this.grid = {
-        w : 10,
-        h : 20
-    }
-
-    // Constructor ===================================================
-
-    if (!gl) {
-        alert("Unable to initialize WebGL. Your browser may not support it.");
-    }
-
-    //  var ratio = canvas.width / canvas.height;
-    //  var matrixP = mat4.perspective(45, ratio, 0.1, 100.0);
-
-    //setup projection testMatrix
-    this.matrixP = mat4.ortho(0, this.grid.w, this.grid.h, 0, 0.1, 100);
-
-    //setup view testMatrix
-    this.matrixV = mat4.lookAt(this.camera.eye, this.camera.center, this.camera.up);
-
-    gl.clearColor(this.clearColor[0],
-        this.clearColor[1],
-        this.clearColor[2],
-        this.clearColor[3]);  // Clear to black, fully opaque
-    
-    gl.clearDepth(1.0);                 // Clear everything
-    gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-    gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-
-    initTetrisRenderElement(gl);
-
-    // ================================================================
-
-    this.draw = function draw(allPieces) {
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        // Bind geoemtry
-        self.glSquare.bind();
-
-        if (allPieces != undefined) {
-            //go through pieces and draw them.
-            for (var i = 0; i < allPieces.length; i++) {
-                var rect = allPieces[i];
-
-                // Get the current shader
-                var shader = rect.type;
-                
-                // Use shader
-                gl.useProgram(shader.program);
-
-                //TODO type decide which shader to use or similar..
-                // for now we use default from shader map
-
-                // TODO Optimize matrix multiplications
-                // Calculate Model Matrix
-                mat4.identity(this.matrixM);
-                mat4.translate(this.matrixM, [rect.x, rect.y, 0]);
-                mat4.scale(this.matrixM, [0.9, 0.9, 1.0]);
-
-                // Calculate MVP Matrix
-                this.matrixMVP = createMVP(this.matrixM, this.matrixV, this.matrixP);
-
-                // Bind attributes
-                gl.vertexAttribPointer(shader.handleVertexPosition, 3, gl.FLOAT, false, 0, 0);
-
-                // Bind uniforms
-                gl.uniformMatrix4fv(shader.handleMVP, false, new Float32Array(this.matrixMVP));
-
-                // Draw
-                self.glSquare.draw();
-            }
-        }
-
-        if (printOnce) {
-            printMVP(this.matrixM, this.matrixV, this.matrixP, this.matrixMVP);
-            printOnce = false
-        }
-    }
-
-    function createMVP(M, V, P) {
-        var MVP = mat4.create();
-        mat4.identity(MVP)
-        mat4.multiply(P, V, MVP);
-        mat4.multiply(MVP, M, MVP);
-
-        return MVP;
-    }
-
-    function initTetrisRenderElement(gl) {
-        var z = 0.0;
-        var w = 1.0;
-        var h = 1.0;
-
-        var vertices = [
-            0, 0, z,
-            w, 0, z,
-            w, h, z,
-            0, h, z
-        ];
-
-        var squareIndices = [
-            0, 1, 2,
-            0, 2, 3
-        ];
-
-        self.glSquare.vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, self.glSquare.vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-        self.glSquare.indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, self.glSquare.indexBuffer);
-
-        //upload data to gl
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
-    }
-};
-
 function TetrisBoard(renderer) {
     var self = this;
     this.renderer = renderer;
@@ -162,6 +26,7 @@ function TetrisBoard(renderer) {
     var shaderMap = {
         TYPE_DEFAULT : createDefaultShader(renderer.gl), //Normal piece
         TYPE_SET     : createSetShader(renderer.gl),
+        TYPE_ANY_COLOR     : createColorShader(renderer.gl),
     }
 
     // TODO create a pool of live blocks and re-use them
@@ -195,20 +60,21 @@ function TetrisBoard(renderer) {
         for (var i = 0; i < len; i++) {
             for (var j = 0; j < len; j++) {
                 if (matrix[j][i]) {
-                    self.addTetrisBaseElement(shaderMap.TYPE_SET, x + i, y + j, false);
+                    self.addTetrisBaseElement(shaderMap.TYPE_ANY_COLOR, x + i, y + j, false);
                 }
             }
         }
     }
-
 
     this.addTetrisBaseElement = function addTetrisBaseElement(type, x, y, alive) {
         var rect = new TetrisBaseElement(type, x, y);
 
         if (alive) {
             self.liveBlocks.push(rect);
+            rect.color = [0.5, 0.0, 0.0, 1.0];
         } else {
             self.setBlocks.push(rect);
+            rect.color = [0.5, 0.5, 0.0, 1.0];
         }
 
         return rect;
@@ -257,7 +123,7 @@ function TetrisBoard(renderer) {
         for (var i = 0; i < len; i++) {
             for (var j = 0; j < len; j++) {
                 if (matrix[j][i]) {
-                    self.addTetrisBaseElement(shaderMap.TYPE_DEFAULT, x + i, y + j, true)
+                    self.addTetrisBaseElement(shaderMap.TYPE_ANY_COLOR, x + i, y + j, true)
                 }
             }
         }
@@ -340,6 +206,29 @@ function createSetShader(gl) {
     return shader;
 
 };
+
+function createColorShader(gl) {
+    // Now figure out what type of shader script we have,
+    // based on its MIME type.
+    var srcFS = getShaderSrc("shader-fs-any-color");
+    var srcVS = getShaderSrc("shader-vs");
+
+    var sf = new ShaderFactory(gl);
+    var shader = sf.makeShader(srcVS, srcFS);
+
+    gl.useProgram(shader.program);
+
+    shader.handleVertexPosition = gl.getAttribLocation(shader.program, "aVertexPosition");
+    shader.handleMVP = gl.getUniformLocation(shader.program, "uMVP");
+    shader.handleBlockColor = gl.getUniformLocation(shader.program, "uBlockColor");
+
+    gl.enableVertexAttribArray(shader.handleVertexPosition);
+
+    return shader;
+
+};
+
+
 
 // Helper functions ===================================================================================
 
