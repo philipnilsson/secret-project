@@ -106,7 +106,6 @@ socket.on('message', function(data) {
 $('#host').click(function() {
   socket.emit('host');
 })
-
 $('#join').click(function() {
   socket.emit('list rooms');
 })

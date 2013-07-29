@@ -26,6 +26,7 @@ var gameLogic = function(input, board) {
     block = Block.moveDir(dir, block);
     bus.push({keyEvent: dir});
     if (block.isSet) {
+      board.set(block);
       bk = Block.randomBlock();
       block = new BlockState(window.blocks[bk], board);
       bus.push({block: bk});
@@ -41,14 +42,13 @@ var replayGameLogic = function(bus, board) {
   var blocks = new Bacon.Bus();
   var block;
   bus.onValue(function(val) {
-    if (val.keyEvent) {
+    if (val.keyEvent)
       block = Block.moveDir(val.keyEvent, block);
-      blocks.push(block);
-    }
-    else if (val.block) {
+    else if (val.block) 
       block = new BlockState(window.blocks[val.block], board);
-      blocks.push(block);
-    }
+    if (block.isSet)
+      block.res = board.set(block);
+    blocks.push(block);
   });
   
   return blocks
@@ -58,18 +58,16 @@ function tetris(drawing, input, replay) {
   
   drawing.drawGameArea(w, h);
 
-  var board = new Board(10, 20);
-  
   if (!replay)
-    bus = gameLogic(input, board);
+    bus = gameLogic(input, new Board(10, 20));
   else
     bus = input;
-  var g = replayGameLogic(bus, board);
+  var g = replayGameLogic(bus, new Board(10, 20));
   
   var score = 0;
   g.onValue(function (block) { 
-    if (block.isSet) { 
-      var res = board.set(block);
+    if (block.res) { 
+      var res = block.res;
       score += res.lines.length;
       drawing.drawScore(score);
       drawing.setBlock(block, res.lines);

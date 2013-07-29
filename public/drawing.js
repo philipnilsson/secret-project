@@ -1,3 +1,4 @@
+
 function Drawing($game) {
 
     var self = this;

@@ -69,7 +69,7 @@ function TetrisBoard(renderer) {
         var ds = (current - end) / (end - start);
         ds += 1;
 
-        console.log("ds: " + ds);
+        //console.log("ds: " + ds);
 
         if(current < end) {
             block.color[0] = startColor[0] + ds * (endColor[0] - startColor[0]);
@@ -82,7 +82,7 @@ function TetrisBoard(renderer) {
 
             clearInterval(animationId);
 
-            console.log("animation stop");
+            //console.log("animation stop");
 
         }
     }
@@ -117,7 +117,7 @@ function TetrisBoard(renderer) {
     }
 
     this.clearRows = function clearRows(listOfRows) {
-        console.log("rows to clear: " + listOfRows)
+        //console.log("rows to clear: " + listOfRows)
 
 
         // caclulate which blocks not to remove
@@ -166,7 +166,7 @@ function TetrisBoard(renderer) {
     }
 
     this.updateBlock = function updateBlock(x, y) {
-        console.log("update block x: " +  x + " y: " + y);
+        //console.log("update block x: " +  x + " y: " + y);
 
         var foundBlock = undefined;
 
