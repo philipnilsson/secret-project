@@ -26,7 +26,7 @@ var gameLogic = function(input, board) {
     block = Block.moveDir(dir, block);
     bus.push({keyEvent: dir});
     if (block.isSet) {
-      board.set(block);
+      bus.push({res: board.set(block)});
       bk = Block.randomBlock();
       block = new BlockState(window.blocks[bk], board);
       bus.push({block: bk});
@@ -42,13 +42,18 @@ var replayGameLogic = function(bus, board) {
   var blocks = new Bacon.Bus();
   var block;
   bus.onValue(function(val) {
-    if (val.keyEvent)
+    if (val.keyEvent) {
       block = Block.moveDir(val.keyEvent, block);
-    else if (val.block) 
+      blocks.push({block: block});
+    }
+    else if (val.block) {
       block = new BlockState(window.blocks[val.block], board);
-    if (block.isSet)
-      block.res = board.set(block);
-    blocks.push(block);
+      blocks.push({block: block});
+    }
+    else if (val.res) {
+      board.set(block)
+      blocks.push({res: val.res});
+    }
   });
   
   return blocks
@@ -65,9 +70,14 @@ function tetris(drawing, input, replay) {
   var g = replayGameLogic(bus, new Board(10, 20));
   
   var score = 0;
-  g.onValue(function (block) { 
-    if (block.res) { 
-      var res = block.res;
+  var block;
+  g.onValue(function (event) {  
+    if (event.block !== undefined) {
+      block = event.block;
+      drawing.drawBlock(block); 
+    }
+    if (event.res) { 
+      var res = event.res;
       score += res.lines.length;
       drawing.drawScore(score);
       drawing.setBlock(block, res.lines);
@@ -79,7 +89,6 @@ function tetris(drawing, input, replay) {
         drawing.addPowerUps(res.powerups);
       }
     }
-    drawing.drawBlock(block); 
   });
   
   g.onEnd(function() {

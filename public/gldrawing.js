@@ -62,9 +62,11 @@ function Drawing($game) {
         }
 
 
+        var tmp = []
         for(var i=0; i<lines.length; i++ ){
-            lines[i] += i;
+            tmp.push(lines[i] + i);
         }
+        lines = tmp;
 
         board.setBlock(mat, st.x, st.y)
 
