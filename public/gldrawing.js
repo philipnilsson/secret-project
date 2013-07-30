@@ -35,42 +35,16 @@ function Drawing($game) {
             }
         }
 
+//        board.drawShapeAt(mat, null, st.x, st.y);
 
-
-        board.drawShapeAt(mat, null, st.x, st.y);
+        board.drawShapeAt(st);
         board.draw();
     };
 
     this.setBlock = function setBlock(st, lines) {
-        // TODO add function which takes the st directly
-        var mat = [
-            [1, 0, 0, 0, 1],
-            [0, 0, 1, 0, 0],
-            [0, 1, 0, 1, 0],
-            [0, 0, 1, 0, 0],
-            [1, 0, 0, 0, 1]
-        ];
+        board.setBlock(st);
 
-        for(var i=0; i<5; i++){
-            for(var j=0; j<5; j++){
-                if (st.block.get(i, j, st.rot)) {
-                    mat[i][j] = 1;
-                } else {
-                    mat[i][j] = 0;
-                }
-            }
-        }
-
-
-        var tmp = []
-        for(var i=0; i<lines.length; i++ ){
-            tmp.push(lines[i] + i);
-        }
-        lines = tmp;
-
-        board.setBlock(mat, st.x, st.y)
-
-        board.updatePositions(lines);
+        if(lines) board.updatePositions(lines);
 
         board.draw();
     }

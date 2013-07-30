@@ -1,29 +1,21 @@
 
-
-
 function Shader() {
     var self = this;
     this.program = -1;
     this.fragmentShader = -1;
     this.vertexShader = -1;
 
-    //Per vertex attributes
-    // this.handleVertexPosition = -1;
-    // this.handleNormal = -1;
-    // this.handleTangnet = -1;
-
     this.Qualifiers = {
-    // Uniforms
-    // TODO
+        // Uniforms
         MVP            : { handle : -1, name : "uMVP" },
         color          : { handle : -1, name : "uColor" },
 
         // Attributes    
-        vertexPosition : { handle : -1, name : "aVertexPosition" },
-    //TODO 
-    // normal         : "aNormal",
-    // biNormal       : "aBiNormal",
-    // tangent        : "aTangent"
+        vertexPosition : { handle : -1, name : "aVertexPosition" }
+        //TODO
+        // normal         : "aNormal",
+        // biNormal       : "aBiNormal",
+        // tangent        : "aTangent"
     }
 
     /**
@@ -31,13 +23,16 @@ function Shader() {
      */
     this.verify = function verify() {
         var keys = Object.keys(self.Qualifiers);
-        keys.forEach(function(entry){
-            var handle = self.Qualifiers[entry].handle;
-            if(handle == -1) return false;
-        });
+
+        for (var i = 0; i < keys.length; i++) {
+            if (self.Qualifiers[keys[i]].handle == -1) {
+                console.log("no handle for: " + keys[i]);
+                return false;
+            }
+        }
 
         return true;
-    }
+    };
 
     this.bindQualifiers = function bindQualifiers(gl) {
         var q = self.Qualifiers;
@@ -48,7 +43,7 @@ function Shader() {
 
         gl.enableVertexAttribArray(q.vertexPosition.handle);
     }
-};
+}
 
 function ShaderFactory(gl) {
     var self = this;
@@ -87,37 +82,13 @@ function ShaderFactory(gl) {
 
             if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
                 alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
-                return -1;
+                shader = -1;
             }
 
             return shader;
         } else {
             console.log("no shadertype or shader source")
+            return -1;
         }
     }
-};
-
-function getShaderSrc(id, type) {
-    var shaderScript = document.getElementById(id);
-
-    // Didn't find an element with the specified ID; abort.
-    if (!shaderScript) {
-        return null;
-    }
-
-    // Walk through the source element's children, building the
-    // shader source string.
-
-    var theSource = "";
-    var currentChild = shaderScript.firstChild;
-
-    while (currentChild) {
-        if (currentChild.nodeType == 3) {
-            theSource += currentChild.textContent;
-        }
-
-        currentChild = currentChild.nextSibling;
-    }
-
-    return theSource
 }

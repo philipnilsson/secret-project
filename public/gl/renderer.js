@@ -96,7 +96,6 @@ function WebGLRenderer(gl) {
 
                 // if we have color bind it to the shader
                 if(qualifiers.color) {
-                    console.log("Color supported");
                     gl.uniform4fv(qualifiers.color.handle, new Float32Array(rect.color));
                 }
 
