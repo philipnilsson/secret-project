@@ -1,16 +1,4 @@
-// TODO rename block color to color 
-
-ShaderAttributesStandard = {
-    // Uniforms
-    handleMVP            : "uMVP",
-    handleColor          : "uColor",
-
-    // Attributes    
-    handleVertexPosition : "aVertexPosition",
-    handleNormal         : "aNormal",
-    handleBiNormal       : "aBiNormal",
-    handleTangent        : "aTangent"
-}
+// TODO add glcheck error
 
 function WebGLRenderer(gl) {
     var self = this;
@@ -79,10 +67,9 @@ function WebGLRenderer(gl) {
             //go through pieces and draw them.
             for (var i = 0; i < allPieces.length; i++) {
                 var rect = allPieces[i];
+                var shader     = rect.type;
+                var qualifiers = shader.Qualifiers;
 
-                // Get the current shader
-                var shader = rect.type;
-                
                 // Use shader
                 gl.useProgram(shader.program);
 
@@ -100,16 +87,19 @@ function WebGLRenderer(gl) {
                 this.matrixMVP = createMVP(this.matrixM, this.matrixV, this.matrixP);
 
                 // Bind attributes
-                gl.vertexAttribPointer(shader.handleVertexPosition, 3, gl.FLOAT, false, 0, 0);
+                gl.vertexAttribPointer(qualifiers.vertexPosition.handle, 3, gl.FLOAT, false, 0, 0);
 
                 // Bind uniforms
-                gl.uniformMatrix4fv(shader.handleMVP, false, new Float32Array(this.matrixMVP));
+                if(qualifiers.MVP) {
+                    gl.uniformMatrix4fv(qualifiers.MVP.handle, false, new Float32Array(this.matrixMVP));                    
+                }
 
                 // if we have color bind it to the shader
-                if(shader.handleBlockColor != undefined && rect.color != undefined) {
-                    gl.uniform4fv(shader.handleBlockColor, new Float32Array(rect.color));    
+                if(qualifiers.color) {
+                    console.log("Color supported");
+                    gl.uniform4fv(qualifiers.color.handle, new Float32Array(rect.color));
                 }
-                
+
                 // Draw
                 glSquare.draw();
             }

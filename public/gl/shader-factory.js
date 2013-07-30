@@ -1,20 +1,52 @@
-//TODO
+
+
+
 function Shader() {
+    var self = this;
     this.program = -1;
     this.fragmentShader = -1;
     this.vertexShader = -1;
 
     //Per vertex attributes
-    this.handleVertexPosition = -1;
-    this.handleNormal = -1;
-    this.handleTangnet = -1;
+    // this.handleVertexPosition = -1;
+    // this.handleNormal = -1;
+    // this.handleTangnet = -1;
+
+    this.Qualifiers = {
+    // Uniforms
+    // TODO
+        MVP            : { handle : -1, name : "uMVP" },
+        color          : { handle : -1, name : "uColor" },
+
+        // Attributes    
+        vertexPosition : { handle : -1, name : "aVertexPosition" },
+    //TODO 
+    // normal         : "aNormal",
+    // biNormal       : "aBiNormal",
+    // tangent        : "aTangent"
+    }
 
     /**
      * Verfies that the shader is properly initiated
      */
     this.verify = function verify() {
-        // TODO verify that all is not -1
+        var keys = Object.keys(self.Qualifiers);
+        keys.forEach(function(entry){
+            var handle = self.Qualifiers[entry].handle;
+            if(handle == -1) return false;
+        });
 
+        return true;
+    }
+
+    this.bindQualifiers = function bindQualifiers(gl) {
+        var q = self.Qualifiers;
+        //TODO
+        q.vertexPosition.handle = gl.getAttribLocation(self.program, q.vertexPosition.name);
+        q.MVP.handle = gl.getUniformLocation(self.program, q.MVP.name);
+        q.color.handle = gl.getUniformLocation(self.program, q.color.name);
+
+        gl.enableVertexAttribArray(q.vertexPosition.handle);
     }
 };
 

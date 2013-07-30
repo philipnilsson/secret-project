@@ -31,9 +31,7 @@ function TetrisBoard(renderer) {
     this.renderer = renderer;
 
     var shaderMap = {
-        TYPE_DEFAULT : createDefaultShader(renderer.gl), //Normal piece
-        TYPE_SET     : createSetShader(renderer.gl),
-        TYPE_ANY_COLOR     : createColorShader(renderer.gl),
+        TYPE_ANY_COLOR : createColorShader(renderer.gl),
     }
 
     // TODO create a pool of live blocks and re-use them
@@ -70,7 +68,6 @@ function TetrisBoard(renderer) {
     }
 
     function animateFoundBlock(block, start, end, startColor, endColor) {
-
         var anim = this;
         var totalTime = end - start;
         this.animate = function() {
@@ -117,10 +114,6 @@ function TetrisBoard(renderer) {
     }
 
     this.clearRows = function clearRows(listOfRows) {
-        //console.log("rows to clear: " + listOfRows)
-
-
-        // caclulate which blocks not to remove
         var blocksToSave = this.setBlocks.filter(function (tetrisElement) {
             return listOfRows.indexOf(tetrisElement.y) == -1
         });
@@ -133,7 +126,6 @@ function TetrisBoard(renderer) {
     this.updatePositions = function (emptyrows) {
         self.clearRows(emptyrows);
 
-        //shift all pieces above one step down
         this.setBlocks.forEach(function (piece) {
             var nYShifts = emptyrows.filter(function (o) {
                 return piece.y <= o;
@@ -166,8 +158,6 @@ function TetrisBoard(renderer) {
     }
 
     this.updateBlock = function updateBlock(x, y) {
-        //console.log("update block x: " +  x + " y: " + y);
-
         var foundBlock = undefined;
 
         for(var i=0; i<self.setBlocks.length; i++) {
@@ -180,8 +170,9 @@ function TetrisBoard(renderer) {
         console.log(foundBlock);
         startAnimation(foundBlock, [0, 0, 0.8, 1]);
     }
+}
 
-    function TetrisBaseElement(type, x, y) {
+function TetrisBaseElement(type, x, y) {
         this.type = type;
         this.x = x;
         this.y = y;
@@ -212,50 +203,7 @@ function TetrisBoard(renderer) {
     }
 }
 
-
 // Shaders ============================================================================================
-
-function createDefaultShader(gl) {
-
-    // Now figure out what type of shader script we have,
-    // based on its MIME type.
-    var srcFS = getShaderSrc("shader-fs");
-    var srcVS = getShaderSrc("shader-vs");
-
-    var sf = new ShaderFactory(gl);
-    var shader = sf.makeShader(srcVS, srcFS);
-
-    gl.useProgram(shader.program);
-
-    shader.handleVertexPosition = gl.getAttribLocation(shader.program, "aVertexPosition");
-    shader.handleMVP = gl.getUniformLocation(shader.program, "uMVP");
-
-    gl.enableVertexAttribArray(shader.handleVertexPosition);
-
-    return shader;
-
-};
-
-function createSetShader(gl) {
-
-    // Now figure out what type of shader script we have,
-    // based on its MIME type.
-    var srcFS = getShaderSrc("shader-fs-set");
-    var srcVS = getShaderSrc("shader-vs");
-
-    var sf = new ShaderFactory(gl);
-    var shader = sf.makeShader(srcVS, srcFS);
-
-    gl.useProgram(shader.program);
-
-    shader.handleVertexPosition = gl.getAttribLocation(shader.program, "aVertexPosition");
-    shader.handleMVP = gl.getUniformLocation(shader.program, "uMVP");
-
-    gl.enableVertexAttribArray(shader.handleVertexPosition);
-
-    return shader;
-
-};
 
 function createColorShader(gl) {
     // Now figure out what type of shader script we have,
@@ -268,11 +216,11 @@ function createColorShader(gl) {
 
     gl.useProgram(shader.program);
 
-    shader.handleVertexPosition = gl.getAttribLocation(shader.program, "aVertexPosition");
-    shader.handleMVP = gl.getUniformLocation(shader.program, "uMVP");
-    shader.handleBlockColor = gl.getUniformLocation(shader.program, "uBlockColor");
+    shader.bindQualifiers(gl);
 
-    gl.enableVertexAttribArray(shader.handleVertexPosition);
+    if(!shader.verify()) {
+        alert("Failed binding qualifiers for color shader");
+    }
 
     return shader;
 
@@ -340,7 +288,6 @@ function printMVP(matrixM, matrixV, matrixP, matrixMVP) {
 
     console.log("P");
     printMat4(matrixP);
-
 
     console.log("MVP");
     printMat4(matrixMVP);
