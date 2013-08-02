@@ -162,6 +162,10 @@ function TetrisBoard(renderer) {
     };
 
     this.clearRows = function clearRows(listOfRows) {
+        console.log("clear rows: " + listOfRows);
+
+
+
         var blocksToSave = this.blocksSet.filter(function (tetrisElement) {
             return listOfRows.indexOf(tetrisElement.y) == -1
         });

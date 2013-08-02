@@ -35,8 +35,6 @@ function Drawing($game) {
             }
         }
 
-//        board.drawShapeAt(mat, null, st.x, st.y);
-
         board.drawShapeAt(st);
         board.draw();
     };
@@ -44,7 +42,13 @@ function Drawing($game) {
     this.setBlock = function setBlock(st, lines) {
         board.setBlock(st);
 
-        if(lines) board.updatePositions(lines);
+        if(lines) {
+            for(var i=0; i<lines.length; i++) {
+                lines[i] += i;
+            }
+
+            board.updatePositions(lines);
+        }
 
         board.draw();
     }
