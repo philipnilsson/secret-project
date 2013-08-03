@@ -35,7 +35,7 @@ var gameLogic = function(input, board) {
       block = new BlockState(window.blocks[bk], board);
       bus.push({block: bk});
       if (block.collides()) 
-        bus.end();
+        bus.endTS();
     }
   });
   

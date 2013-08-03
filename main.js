@@ -58,7 +58,7 @@ io.sockets.on('connection', function (socket) {
     
     socket.on('startGame', function() {
         var room = getRoom(socket);
-        io.sockets.in(room).emit('start', idsInRoom());
+        io.sockets.in(room).emit('startTSTS', idsInRoom());
     });
     
     socket.on('send', function (data) {

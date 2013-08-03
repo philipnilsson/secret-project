@@ -91,17 +91,108 @@ function TetrisBoard(renderer) {
      * @param toColor The color we should animate to
      * @param duration The duration of the animation
      */
-    function startAnimation(block, toColor, duration) {
+    function startFadeAnimation(block, toColor, duration) {
         var start = new Date().getTime();
         // time as parameter
         var end = start + duration;
 
-        var animation = new animateFoundBlock(block, start, end, block.color, toColor);
+        var animation = new ColorFadeAnimation(block, start, end, block.color, toColor);
         animation.animationId = setInterval(animation.animate, 15);
     }
+
+
+    function Animation(duration, updateRate) {
+        var self = this;
+
+        // Default duration of 250ms
+        this.duration = duration == undefined ? 250 : duration;
+        this.updateRate = updateRate == undefined ? 15 : updateRate;
+
+        this.startTS = undefined;
+        this.endTS   = undefined;
+
+        this.animationId = undefined;
+
+        this.onAnimateFunction = undefined;
+
+
+        function getCurrent() {
+            return new Date().getTime();
+        }
+
+        this.start = function start(onAnimateFunction){
+            console.log("start animation");
+            self.startTS = getCurrent();
+            self.endTS = self.startTS + self.duration;
+            self.onAnimateFunction = onAnimateFunction;
+            self.animationId = setInterval(animateThis, self.updateRate);
+        }
+
+        this.stop = function stop() {
+            if(self.animationId) {
+                clearInterval(self.animationId);
+            }
+        }
+
+        function animateThis() {
+            if(getCurrent() >= self.endTS ){
+                self.stop();
+            } else {
+                if(self.onAnimateFunction) {
+                    self.onAnimateFunction();
+                }
+            }
+        }
+
+        this.getAlpha = function getAlpha(){
+            var alpha = 0;
+            if(self.endTS && self.startTS) {
+                alpha = (getCurrent() - self.startTS) / (self.duration);
+            }
+
+            return alpha;
+        }
+
+        /**
+         * Standard linear interpolation
+         *
+         * @param alpha value between [0, 1]
+         * @param v1 Vector 1 [x,y,z, ...]
+         * @param v2 Vector 2 [x,y,z, ...]
+         */
+        this.interpolate = function interpolate(v1, v2, alpha) {
+            var res = [];
+            for (var i = 0; i < v1.length; i++)
+                res.push(v1[i] - alpha * (v1[i] - v2[i]));
+            return res;
+        }
+
+    }
+
+
+//    this.Animation.prototype.MyAnimation = function MyAnimation() {
+//
+//
+//    }
+
+//    /**
+//     * @param duration The duration of the animation
+//     * @param animation The actual animation whom should take a block as first paramter
+//     */
+//    function startAnimation(duration, animation, updateInterval) {
+//        var interval = !updateInterval ? 15 : updateInterval;
+//        var start = new Date().getTime();
+//        // time as parameter
+//        var end = start + duration;
+//
+//        animation.setStartEnd()
+//
+//        animation.animationId = setInterval(animation.animate, interval);
+//    }
+
     // TODO create animation class
 
-    function animateFoundBlock(block, start, end, startColor, endColor) {
+    function ColorFadeAnimation(block, start, end, startColor, endColor) {
         var anim = this;
         var totalTime = end - start;
         this.animate = function () {
@@ -164,8 +255,6 @@ function TetrisBoard(renderer) {
     this.clearRows = function clearRows(listOfRows) {
         console.log("clear rows: " + listOfRows);
 
-
-
         var blocksToSave = this.blocksSet.filter(function (tetrisElement) {
             return listOfRows.indexOf(tetrisElement.y) == -1
         });
@@ -175,11 +264,11 @@ function TetrisBoard(renderer) {
         }
     };
 
-    this.updatePositions = function (emptyrows) {
-        self.clearRows(emptyrows);
+    this.updatePositions = function (emptyRows) {
+        self.clearRows(emptyRows);
 
         this.blocksSet.forEach(function (piece) {
-            piece.y += emptyrows.filter(function (o) {
+            piece.y += emptyRows.filter(function (o) {
                 return piece.y <= o;
             }).length;
         });
@@ -218,6 +307,7 @@ function TetrisBoard(renderer) {
 
     this.updateBlock = function updateBlock(x, y) {
         var foundBlock = undefined;
+        var duration = 1000; // ms
 
         for (var i = 0; i < self.blocksSet.length; i++) {
             var block = self.blocksSet[i];
@@ -228,7 +318,16 @@ function TetrisBoard(renderer) {
         }
 
         if (foundBlock) {
-            startAnimation(foundBlock, [0, 0, 0.8, 1], 1000);
+//            startFadeAnimation(foundBlock, [0, 0, 0.8, 1], duration);
+
+                var startColor = foundBlock.color;
+                var animation = new Animation(duration, 15);
+
+                animation.start(function(){
+                    foundBlock.color = interpolate(startColor, [0, 0, 0.8, 1], animation.getAlpha());
+                    self.draw();
+                });
+
         } else {
             console.log("Found no block to update; x: " + x + " y: " + y);
         }

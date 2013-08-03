@@ -112,7 +112,7 @@ jQuery.fn = jQuery.prototype = {
 		// Handle HTML strings
 		if ( typeof selector === "string" ) {
 			if ( selector.charAt(0) === "<" && selector.charAt( selector.length - 1 ) === ">" && selector.length >= 3 ) {
-				// Assume that strings that start and end with <> are HTML and skip the regex check
+				// Assume that strings that startTS and endTS with <> are HTML and skip the regex check
 				match = [ null, selector, null ];
 
 			} else {
@@ -274,7 +274,7 @@ jQuery.fn = jQuery.prototype = {
 		}));
 	},
 
-	end: function() {
+	endTS: function() {
 		return this.prevObject || this.constructor(null);
 	},
 
@@ -5757,7 +5757,7 @@ jQuery.fn.extend({
 			if ( !jQuery.nodeName( this, "body" ) ) {
 				jQuery( this ).replaceWith( this.childNodes );
 			}
-		}).end();
+		}).endTS();
 	},
 
 	append: function() {
@@ -5969,7 +5969,7 @@ jQuery.fn.extend({
 			if ( first ) {
 				table = table && jQuery.nodeName( first, "tr" );
 
-				// Use the original fragment for the last item instead of the first because it can end up
+				// Use the original fragment for the last item instead of the first because it can endTS up
 				// being emptied incorrectly in certain situations (#8070).
 				// Fragments from the fragment cache must always be cloned and never used in place.
 				for ( iNoClone = results.cacheable || l - 1; i < l; i++ ) {
@@ -6093,7 +6093,7 @@ function cloneFixAttributes( src, dest ) {
 
 		dest.defaultChecked = dest.checked = src.checked;
 
-		// IE6-7 get confused and end up setting the value of a cloned
+		// IE6-7 get confused and endTS up setting the value of a cloned
 		// checkbox/radio button to an empty string instead of "on"
 		if ( dest.value !== src.value ) {
 			dest.value = src.value;
@@ -7287,14 +7287,14 @@ var
 	 *    - AFTER param serialization (s.data is a string if s.processData is true)
 	 * 3) key is the dataType
 	 * 4) the catchall symbol "*" can be used
-	 * 5) execution will start with transport dataType and THEN continue down to "*" if needed
+	 * 5) execution will startTS with transport dataType and THEN continue down to "*" if needed
 	 */
 	prefilters = {},
 
 	/* Transports bindings
 	 * 1) key is the dataType
 	 * 2) the catchall symbol "*" can be used
-	 * 3) selection will start with transport dataType and THEN go to "*" if needed
+	 * 3) selection will startTS with transport dataType and THEN go to "*" if needed
 	 */
 	transports = {},
 
@@ -7703,7 +7703,7 @@ jQuery.extend({
 
 		// Callback for when everything is done
 		// It is defined here because jslint complains if it is declared
-		// at the end of the function (which would be more logical and readable)
+		// at the endTS of the function (which would be more logical and readable)
 		function done( status, nativeStatusText, responses, headers ) {
 			var isSuccess, success, error, response, modified,
 				statusText = nativeStatusText;
@@ -7895,7 +7895,7 @@ jQuery.extend({
 					// try replacing _= if it is there
 					ret = s.url.replace( rts, "$1_=" + ts );
 
-				// if nothing was replaced, add timestamp to the end
+				// if nothing was replaced, add timestamp to the endTS
 				s.url = ret + ( ( ret === s.url ) ? ( rquery.test( s.url ) ? "&" : "?" ) + "_=" + ts : "" );
 			}
 		}
@@ -8556,7 +8556,7 @@ var fxNow, timerId,
 				if ( unit !== "px" && start ) {
 					// Iteratively approximate from a nonzero starting point
 					// Prefer the current property, because this process will be trivial if it uses the same units
-					// Fallback to end or a simple constant
+					// Fallback to endTS or a simple constant
 					start = jQuery.css( tween.elem, prop, true ) || end || 1;
 
 					do {
@@ -8574,9 +8574,9 @@ var fxNow, timerId,
 				}
 
 				tween.unit = unit;
-				tween.start = start;
+				tween.startTS = start;
 				// If a +=/-= token was provided, we're doing a relative animation
-				tween.end = parts[1] ? start + ( parts[1] + 1 ) * end : end;
+				tween.endTS = parts[1] ? start + ( parts[1] + 1 ) * end : end;
 			}
 			return tween;
 		}]
@@ -8651,7 +8651,7 @@ function Animation( elem, properties, options ) {
 			},
 			stop: function( gotoEnd ) {
 				var index = 0,
-					// if we are going to the end, we want to run all the tweens
+					// if we are going to the endTS, we want to run all the tweens
 					// otherwise we skip this part
 					length = gotoEnd ? animation.tweens.length : 0;
 
@@ -8682,8 +8682,8 @@ function Animation( elem, properties, options ) {
 
 	createTweens( animation, props );
 
-	if ( jQuery.isFunction( animation.opts.start ) ) {
-		animation.opts.start.call( elem, animation );
+	if ( jQuery.isFunction( animation.opts.startTS ) ) {
+		animation.opts.startTS.call( elem, animation );
 	}
 
 	jQuery.fx.timer(
@@ -8873,10 +8873,10 @@ function defaultPrefilter( elem, props, opts ) {
 			orig[ prop ] = dataShow[ prop ] || jQuery.style( elem, prop );
 
 			if ( !( prop in dataShow ) ) {
-				dataShow[ prop ] = tween.start;
+				dataShow[ prop ] = tween.startTS;
 				if ( hidden ) {
-					tween.end = tween.start;
-					tween.start = prop === "width" || prop === "height" ? 1 : 0;
+					tween.endTS = tween.startTS;
+					tween.startTS = prop === "width" || prop === "height" ? 1 : 0;
 				}
 			}
 		}
@@ -8895,8 +8895,8 @@ Tween.prototype = {
 		this.prop = prop;
 		this.easing = easing || "swing";
 		this.options = options;
-		this.start = this.now = this.cur();
-		this.end = end;
+		this.startTS = this.now = this.cur();
+		this.endTS = end;
 		this.unit = unit || ( jQuery.cssNumber[ prop ] ? "" : "px" );
 	},
 	cur: function() {
@@ -8917,7 +8917,7 @@ Tween.prototype = {
 		} else {
 			this.pos = eased = percent;
 		}
-		this.now = ( this.end - this.start ) * eased + this.start;
+		this.now = ( this.endTS - this.startTS ) * eased + this.startTS;
 
 		if ( this.options.step ) {
 			this.options.step.call( this.elem, this.now, this );
@@ -8995,7 +8995,7 @@ jQuery.fn.extend({
 		return this.filter( isHidden ).css( "opacity", 0 ).show()
 
 			// animate to the value specified
-			.end().animate({ opacity: to }, speed, easing, callback );
+			.endTS().animate({ opacity: to }, speed, easing, callback );
 	},
 	animate: function( prop, speed, easing, callback ) {
 		var empty = jQuery.isEmptyObject( prop ),
@@ -9056,7 +9056,7 @@ jQuery.fn.extend({
 				}
 			}
 
-			// start the next in the queue if the last step wasn't forced
+			// startTS the next in the queue if the last step wasn't forced
 			// timers currently will call their complete callbacks, which will dequeue
 			// but only if they were gotoEnd
 			if ( dequeue || !gotoEnd ) {

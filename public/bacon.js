@@ -578,7 +578,7 @@
     };
 
     End.prototype.describe = function() {
-      return "<end>";
+      return "<endTS>";
     };
 
     return End;
@@ -1141,7 +1141,7 @@
       }
       buffer = {
         scheduled: false,
-        end: null,
+        endTS: null,
         values: [],
         flush: function() {
           var reply;
@@ -1150,14 +1150,14 @@
           if (this.values.length > 0) {
             reply = this.push(next(this.values));
             this.values = [];
-            if (this.end != null) {
-              return this.push(this.end);
+            if (this.endTS != null) {
+              return this.push(this.endTS);
             } else if (reply !== Bacon.noMore) {
               return onFlush(this);
             }
           } else {
-            if (this.end != null) {
-              return this.push(this.end);
+            if (this.endTS != null) {
+              return this.push(this.endTS);
             }
           }
         },
@@ -1184,7 +1184,7 @@
         if (event.isError()) {
           reply = this.push(event);
         } else if (event.isEnd()) {
-          buffer.end = event;
+          buffer.endTS = event;
           if (!buffer.scheduled) {
             buffer.flush();
           }
@@ -1760,7 +1760,7 @@
       this.error = function(error) {
         return typeof sink === "function" ? sink(new Error(error)) : void 0;
       };
-      this.end = function() {
+      this.endTS = function() {
         ended = true;
         unsubAll();
         return typeof sink === "function" ? sink(end()) : void 0;

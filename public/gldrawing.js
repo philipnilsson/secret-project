@@ -16,25 +16,6 @@ function Drawing($game) {
 
 
     this.drawBlock = function drawBlock(st) {
-        // TODO add function which takes the st directly
-        var mat = [
-            [1, 0, 0, 0, 1],
-            [0, 0, 1, 0, 0],
-            [0, 1, 0, 1, 0],
-            [0, 0, 1, 0, 0],
-            [1, 0, 0, 0, 1]
-        ];
-
-        for(var i=0; i<5; i++){
-            for(var j=0; j<5; j++){
-                if (st.block.get(i, j, st.rot)) {
-                    mat[i][j] = 1;
-                } else {
-                    mat[i][j] = 0;
-                }
-            }
-        }
-
         board.drawShapeAt(st);
         board.draw();
     };
@@ -65,8 +46,6 @@ function Drawing($game) {
     this.drawSpecial = function drawSpecial(res) {
         //console.log("draw special: ", res);
         board.updateBlock(res.j, res.i);
-
         board.draw();
-      // TODO
     };
 };

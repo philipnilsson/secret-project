@@ -189,7 +189,7 @@ function blocksFromSocket(gameEvents, callback) {
 }
 
 started = false;
-socket.on('start', function(data) {
+socket.on('startTS', function(data) {
     data = data.filter(function(id) { return id !== socketId })
     $gameRoom.hide();
     if (!started) {
