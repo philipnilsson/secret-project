@@ -48,6 +48,77 @@ function interpolate(v1, v2, alpha) {
     return res;
 }
 
+/**
+ * @param duration The duratiom, default is 250 ms
+ * @param updateRate The update rate, the default is 15 ms
+ * @constructor
+ */
+function Animation(duration, updateRate) {
+    var self = this;
+
+    this.animationId = undefined;
+
+    // Default duration of 250ms
+    this.duration   = duration   == undefined ? 250 : duration;
+    this.updateRate = updateRate == undefined ? 15  : updateRate;
+
+    this.startTS = undefined;
+    this.endTS   = undefined;
+
+    // Callbacks
+    this.onStopCallback = undefined;
+    this.onAnimateCallback = undefined;
+    this.animateForever = false;
+
+    function getCurrent() {
+        return new Date().getTime();
+    }
+
+    function animateThis() {
+        // If we are not animating forever stop after end time has been passed
+        if(!self.animateForever && getCurrent() >= self.endTS ){
+            self.stop();
+        }
+
+        if(self.onAnimateCallback) {
+            self.onAnimateCallback(self.getAlpha());
+        }
+    }
+
+    this.start = function start(onAnimateCallback){
+        if(DEBUG) if(DEBUG) console.log("start animation");
+
+        self.startTS = getCurrent();
+        self.endTS = self.startTS + self.duration;
+        self.onAnimateCallback = onAnimateCallback;
+        self.animationId = setInterval(animateThis, self.updateRate);
+    };
+
+    this.stop = function stop() {
+        if(self.animationId) {
+            clearInterval(self.animationId);
+
+            if(self.onStopCallback) {
+                self.onStopCallback();
+            }
+        }
+    };
+
+
+    this.setOnStop = function(onStopCallback) {
+        self.onStopCallback = onStopCallback;
+    };
+
+    this.getAlpha = function getAlpha(){
+        var alpha = 0;
+        if(self.endTS && self.startTS) {
+            alpha = (getCurrent() - self.startTS) / (self.duration);
+        }
+
+        return alpha;
+    };
+}
+
 function TetrisBoard(renderer) {
     var self = this;
     this.renderer = renderer;
@@ -60,75 +131,13 @@ function TetrisBoard(renderer) {
     this.blocksAlive = [];
     this.blocksSet   = [];
 
-    this.init = function init() {
-        self.draw();
-    };
-
-    this.draw = function draw() {
+    function draw() {
         self.renderer.draw(self.blocksAlive.concat(self.blocksSet));
-
-    };
-
-    function Animation(duration, updateRate) {
-        var self = this;
-
-        // Default duration of 250ms
-        this.duration = duration == undefined ? 250 : duration;
-        this.updateRate = updateRate == undefined ? 15 : updateRate;
-
-        this.startTS = undefined;
-        this.endTS   = undefined;
-
-        this.animationId = undefined;
-
-        // Callbacks
-        this.onStop = undefined;
-        this.onAnimateFunction = undefined;
-        this.animateForever = false;
-
-        function getCurrent() {
-            return new Date().getTime();
-        }
-
-        this.start = function start(onAnimateFunction){
-            if(DEBUG) if(DEBUG) console.log("start animation");
-
-            self.startTS = getCurrent();
-            self.endTS = self.startTS + self.duration;
-            self.onAnimateFunction = onAnimateFunction;
-            self.animationId = setInterval(animateThis, self.updateRate);
-        };
-
-        this.stop = function stop() {
-            if(self.animationId) {
-                clearInterval(self.animationId);
-
-                if(self.onStop) {
-                    self.onStop();
-                }
-            }
-        };
-
-        function animateThis() {
-            // If we are not animating forever stop after end time has been passed
-            if(!self.animateForever && getCurrent() >= self.endTS ){
-                self.stop();
-            }
-
-            if(self.onAnimateFunction) {
-                self.onAnimateFunction();
-            }
-        }
-
-        this.getAlpha = function getAlpha(){
-            var alpha = 0;
-            if(self.endTS && self.startTS) {
-                alpha = (getCurrent() - self.startTS) / (self.duration);
-            }
-
-            return alpha;
-        }
     }
+
+    this.init = function init() {
+        draw();
+    };
 
     /**
      * Set block from alive to set
@@ -138,13 +147,21 @@ function TetrisBoard(renderer) {
     this.setBlock = function setBlock(st) {
         self.blocksAlive = [];
 
+        var updatedBlocks = []
         for (var i = 0; i < 5; i++) {
             for (var j = 0; j < 5; j++) {
                 if (st.block.get(j, i, st.rot)) {
-                    addBaseBlock(shaderMap.TYPE_ANY_COLOR, st.x + i, st.y + j, false);
+                    var block  = addBaseBlock(shaderMap.TYPE_ANY_COLOR, st.x + i, st.y + j, false);
+                    updatedBlocks.push(block);
                 }
             }
         }
+        new Animation(100).start(function(a) {
+            for(var i=0; i<updatedBlocks.length; i++){
+                updatedBlocks[i].color = interpolate(Color.RED, Color.COLOR_SET, a);
+            }
+            draw();
+        });
     };
 
     /**
@@ -191,6 +208,7 @@ function TetrisBoard(renderer) {
         }
 
         updatePositions(listOfRows);
+        draw();
     };
 
     this.drawBlock = function drawBlock(st) {
@@ -206,6 +224,8 @@ function TetrisBoard(renderer) {
                 }
             }
         }
+
+        draw();
     };
 
 
@@ -221,7 +241,7 @@ function TetrisBoard(renderer) {
             duration   : 250,
             startColor : Color.WHITE,
             endColor   : Color.BLUE_SPECIAL
-        }
+        };
 
         for (var i = 0; i < self.blocksSet.length; i++) {
             var block = self.blocksSet[i];
@@ -232,11 +252,9 @@ function TetrisBoard(renderer) {
         }
 
         if (prop.block) {
-            var animation = new Animation(prop.duration);
-
-            animation.start(function(){
-                prop.block.color = interpolate(prop.startColor, prop.endColor, animation.getAlpha());
-                self.draw();
+            new Animation(prop.duration).start(function(alpha){
+                prop.block.color = interpolate(prop.startColor, prop.endColor, alpha);
+                draw();
             });
 
         } else {

@@ -16,9 +16,6 @@ function Drawing($game) {
 
     this.drawBlock = function drawBlock(st) {
         board.drawBlock(st);
-
-        // TODO implicitly call draw
-        board.draw();
     };
 
     this.setBlock = function setBlock(st, lines) {
@@ -31,21 +28,14 @@ function Drawing($game) {
 
             board.clearRows(lines);
         }
-
-        // TODO implicitly call draw
-        board.draw();
     };
 
     this.drawSpecial = function drawSpecial(res) {
-        //console.log("draw special: ", res);
         board.setSpecialBlock(res.j, res.i);
-
-        // TODO implicitly call draw
-        board.draw();
     };
 
-    // Scoreboard related
 
+    // Scoreboard related
     this.addPowerUps = function addPowerUps(powerups) {
         //console.log("power ups: " + powerups);
         // TODO
