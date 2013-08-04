@@ -1,25 +1,15 @@
 // Prints the M V P matrices
-var printOnce = false;
-
-/**
- *  |-----|
- *  |     |  <===== Tetris Shape
- *  |-----|
- *  |-----||-----|
- *  |     |      |
- *  |-----||-----|
- *  |-----|
- *  |     |
- *  |-----|
- *
- *
- *  |-----|
- *  |     |  <===== Tetris Block
- *  |-----|
- *
- */
+var printMVPOnce = false;
+var DEBUG        = true;
 
 
+var Color = {
+    WHITE        : [1.0, 1.0, 1.0, 1.0],
+    RED          : [1.0, 0.0, 0.0, 1.0],
+    BLUE_SPECIAL : [0.0, 0.2, 1.0, 1.0],
+    COLOR_SET    : [1.0, 1.0, 0.0, 1.0]
+
+};
 
 /**
  * Object representing the OGL graphical element for a tetris block
@@ -29,10 +19,9 @@ var printOnce = false;
 function GLSquare(gl) {
     var self = this;
 
-    this.indexBuffer = -1;
+    this.indexBuffer  = -1;
     this.vertexBuffer = -1;
-    this.color = [1, 1, 1, 1];
-
+    this.color = Color.WHITE;
 
     this.bind = function bind() {
         gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
@@ -69,37 +58,16 @@ function TetrisBoard(renderer) {
 
     // TODO create a pool of live blocks and re-use them
     this.blocksAlive = [];
-
-    this.blocksSet = [];
+    this.blocksSet   = [];
 
     this.init = function init() {
         self.draw();
     };
 
     this.draw = function draw() {
-        // console.log('draw')
-        var allBlocks = self.blocksAlive.concat(self.blocksSet);
-        self.renderer.draw(allBlocks);
+        self.renderer.draw(self.blocksAlive.concat(self.blocksSet));
 
     };
-
-    /**
-     * Animates the color of a block from the set
-     * color to the {@link toColor}
-     *
-     * @param block The block who is being aniamted
-     * @param toColor The color we should animate to
-     * @param duration The duration of the animation
-     */
-    function startFadeAnimation(block, toColor, duration) {
-        var start = new Date().getTime();
-        // time as parameter
-        var end = start + duration;
-
-        var animation = new ColorFadeAnimation(block, start, end, block.color, toColor);
-        animation.animationId = setInterval(animation.animate, 15);
-    }
-
 
     function Animation(duration, updateRate) {
         var self = this;
@@ -113,34 +81,42 @@ function TetrisBoard(renderer) {
 
         this.animationId = undefined;
 
+        // Callbacks
+        this.onStop = undefined;
         this.onAnimateFunction = undefined;
-
+        this.animateForever = false;
 
         function getCurrent() {
             return new Date().getTime();
         }
 
         this.start = function start(onAnimateFunction){
-            console.log("start animation");
+            if(DEBUG) if(DEBUG) console.log("start animation");
+
             self.startTS = getCurrent();
             self.endTS = self.startTS + self.duration;
             self.onAnimateFunction = onAnimateFunction;
             self.animationId = setInterval(animateThis, self.updateRate);
-        }
+        };
 
         this.stop = function stop() {
             if(self.animationId) {
                 clearInterval(self.animationId);
+
+                if(self.onStop) {
+                    self.onStop();
+                }
             }
-        }
+        };
 
         function animateThis() {
-            if(getCurrent() >= self.endTS ){
+            // If we are not animating forever stop after end time has been passed
+            if(!self.animateForever && getCurrent() >= self.endTS ){
                 self.stop();
-            } else {
-                if(self.onAnimateFunction) {
-                    self.onAnimateFunction();
-                }
+            }
+
+            if(self.onAnimateFunction) {
+                self.onAnimateFunction();
             }
         }
 
@@ -152,217 +128,128 @@ function TetrisBoard(renderer) {
 
             return alpha;
         }
-
-        /**
-         * Standard linear interpolation
-         *
-         * @param alpha value between [0, 1]
-         * @param v1 Vector 1 [x,y,z, ...]
-         * @param v2 Vector 2 [x,y,z, ...]
-         */
-        this.interpolate = function interpolate(v1, v2, alpha) {
-            var res = [];
-            for (var i = 0; i < v1.length; i++)
-                res.push(v1[i] - alpha * (v1[i] - v2[i]));
-            return res;
-        }
-
     }
 
-
-//    this.Animation.prototype.MyAnimation = function MyAnimation() {
-//
-//
-//    }
-
-//    /**
-//     * @param duration The duration of the animation
-//     * @param animation The actual animation whom should take a block as first paramter
-//     */
-//    function startAnimation(duration, animation, updateInterval) {
-//        var interval = !updateInterval ? 15 : updateInterval;
-//        var start = new Date().getTime();
-//        // time as parameter
-//        var end = start + duration;
-//
-//        animation.setStartEnd()
-//
-//        animation.animationId = setInterval(animation.animate, interval);
-//    }
-
-    // TODO create animation class
-
-    function ColorFadeAnimation(block, start, end, startColor, endColor) {
-        var anim = this;
-        var totalTime = end - start;
-        this.animate = function () {
-
-            var current = new Date().getTime();
-            var ds = (current - start) / totalTime;
-
-            if (current < end) {
-                block.color = interpolate(startColor, endColor, ds);
-                self.draw();
-            } else {
-                block.color = endColor;
-                clearInterval(anim.animationId);
-            }
-        }
-    }
-
-    // FIXME Deprecated
-    this.setBlock = function setBlock(matrix, x, y) {
-        self.blocksAlive = [];
-
-        var len = matrix.length;
-
-        for (var i = 0; i < len; i++) {
-            for (var j = 0; j < len; j++) {
-                if (matrix[j][i]) {
-                    self.addTetrisBaseElement(shaderMap.TYPE_ANY_COLOR, x + i, y + j, false);
-                }
-            }
-        }
-    };
-
+    /**
+     * Set block from alive to set
+     *
+     * @param st
+     */
     this.setBlock = function setBlock(st) {
         self.blocksAlive = [];
 
         for (var i = 0; i < 5; i++) {
             for (var j = 0; j < 5; j++) {
                 if (st.block.get(j, i, st.rot)) {
-                    self.addTetrisBaseElement(shaderMap.TYPE_ANY_COLOR, st.x + i, st.y + j, false);
+                    addBaseBlock(shaderMap.TYPE_ANY_COLOR, st.x + i, st.y + j, false);
                 }
             }
         }
     };
 
-    this.addTetrisBaseElement = function addTetrisBaseElement(type, x, y, alive) {
-        var rect = new TetrisBaseElement(type, x, y);
+    /**
+     * Adds a tetris base block to the stack of blocks
+     *
+     * @param type The type of block
+     * @param x The x-coordinate
+     * @param y The y-coordinate
+     * @param alive If the block is alive
+     * @returns {BaseBlock}
+     */
+    function addBaseBlock(type, x, y, alive) {
+        var block = new BaseBlock(type, x, y);
 
         if (alive) {
-            self.blocksAlive.push(rect);
             // TODO decide color by type instead..
-            rect.color = [0.5, 0.0, 0.0, 1.0];
+            block.color = Color.RED;
+            self.blocksAlive.push(block);
         } else {
-            self.blocksSet.push(rect);
-            rect.color = [0.5, 0.5, 0.0, 1.0];
+            block.color = Color.COLOR_SET;
+            self.blocksSet.push(block);
         }
 
-        return rect;
-    };
+        return block;
+    }
+
+    function updatePositions(emptyRows) {
+        self.blocksSet.forEach(function (block) {
+            block.y += emptyRows.filter(function (o) {
+                return block.y <= o;
+            }).length;
+        });
+    }
 
     this.clearRows = function clearRows(listOfRows) {
-        console.log("clear rows: " + listOfRows);
+        if(DEBUG) console.log("clear rows: " + listOfRows);
 
-        var blocksToSave = this.blocksSet.filter(function (tetrisElement) {
+        var blocksToSave = self.blocksSet.filter(function (tetrisElement) {
             return listOfRows.indexOf(tetrisElement.y) == -1
         });
 
-        if (this.blocksSet.length != blocksToSave.length) {
-            this.blocksSet = blocksToSave;
+        if (self.blocksSet.length != blocksToSave.length) {
+            self.blocksSet = blocksToSave;
         }
+
+        updatePositions(listOfRows);
     };
 
-    this.updatePositions = function (emptyRows) {
-        self.clearRows(emptyRows);
-
-        this.blocksSet.forEach(function (piece) {
-            piece.y += emptyRows.filter(function (o) {
-                return piece.y <= o;
-            }).length;
-        });
-    };
-
-    // FIXME Deprecated
-    this.drawShapeAt = function drawShapeAt(matrix, type, x, y) {
+    this.drawBlock = function drawBlock(st) {
         self.blocksAlive = [];
 
-        var len = matrix.length;
-
-        for (var i = 0; i < len; i++) {
-            for (var j = 0; j < len; j++) {
-                if (matrix[j][i]) {
-                    // TODO use the actual type..
-                    self.addTetrisBaseElement(shaderMap.TYPE_ANY_COLOR, x + i, y + j, true)
-                }
-            }
-        }
-    };
-
-    this.drawShapeAt = function drawShapeAt(st) {
-        self.blocksAlive = [];
-
+        // Max dimension of array
         var len = 5;
 
         for (var i = 0; i < len; i++) {
             for (var j = 0; j < len; j++) {
                 if (st.block.get(j, i, st.rot)) {
-                    self.addTetrisBaseElement(shaderMap.TYPE_ANY_COLOR, st.x + i, st.y + j, true)
+                    addBaseBlock(shaderMap.TYPE_ANY_COLOR, st.x + i, st.y + j, true)
                 }
             }
         }
     };
 
 
-    this.updateBlock = function updateBlock(x, y) {
-        var foundBlock = undefined;
-        var duration = 1000; // ms
+    /**
+     * Sets block at position to a special block.
+     * @param x The x-coordinate
+     * @param y The y-coordinate
+     */
+    this.setSpecialBlock = function setSpecialBlock(x, y) {
+        // Animation properties
+        var prop = {
+            block : undefined,
+            duration   : 250,
+            startColor : Color.WHITE,
+            endColor   : Color.BLUE_SPECIAL
+        }
 
         for (var i = 0; i < self.blocksSet.length; i++) {
             var block = self.blocksSet[i];
             if (block.x == x && block.y == y) {
-                foundBlock = block;
+                prop.block = block;
                 break;
             }
         }
 
-        if (foundBlock) {
-//            startFadeAnimation(foundBlock, [0, 0, 0.8, 1], duration);
+        if (prop.block) {
+            var animation = new Animation(prop.duration);
 
-                var startColor = foundBlock.color;
-                var animation = new Animation(duration, 15);
-
-                animation.start(function(){
-                    foundBlock.color = interpolate(startColor, [0, 0, 0.8, 1], animation.getAlpha());
-                    self.draw();
-                });
+            animation.start(function(){
+                prop.block.color = interpolate(prop.startColor, prop.endColor, animation.getAlpha());
+                self.draw();
+            });
 
         } else {
-            console.log("Found no block to update; x: " + x + " y: " + y);
+            if(DEBUG) console.log("Found no block to update; x: " + x + " y: " + y);
         }
 
     };
 }
 
-function TetrisBaseElement(type, x, y) {
+function BaseBlock(type, x, y) {
     this.type = type;
     this.x = x;
     this.y = y;
-    this.alive = true;
-
-
-    this.kill = function kill() {
-        this.alive = false;
-    };
-
-    this.resurrect = function resurrect() {
-        this.alive = true;
-    };
-
-    //takes alive state into consideration
-    // only alive objects can be moved with this function.
-    this.move = function move(dx, dy) {
-        if (this.alive) {
-            this.forceMove(dx, dy);
-        }
-    };
-
-    //Disregards alive state
-    this.forceMove = function forceMove(dx, dy) {
-        this.x -= dx;
-        this.y -= dy;
-    };
 }
 
 // Shaders ============================================================================================
@@ -435,15 +322,17 @@ function matrixToString(matrix) {
 }
 
 function printMVP(matrixM, matrixV, matrixP, matrixMVP) {
-    console.log("M");
-    matrixToString(matrixM);
+    if(DEBUG){
+        console.log("M");
+        console.log(matrixToString(matrixM));
 
-    console.log("V");
-    matrixToString(matrixV);
+        console.log("V");
+        console.log(matrixToString(matrixV));
 
-    console.log("P");
-    matrixToString(matrixP);
+        console.log("P");
+        console.log(matrixToString(matrixP));
 
-    console.log("MVP");
-    matrixToString(matrixMVP);
+        console.log("MVP");
+        console.log(matrixToString(matrixMVP));
+    }
 }

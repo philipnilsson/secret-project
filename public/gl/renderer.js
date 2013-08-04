@@ -104,9 +104,9 @@ function WebGLRenderer(gl) {
             }
         }
 
-        if (printOnce) {
+        if (printMVPOnce) {
             printMVP(this.matrixM, this.matrixV, this.matrixP, this.matrixMVP);
-            printOnce = false
+            printMVPOnce = false
         }
     }
 

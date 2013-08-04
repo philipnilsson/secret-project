@@ -10,13 +10,14 @@ function Drawing($game) {
         var renderer = new WebGLRenderer(gl);
 
         board = new TetrisBoard(renderer);
-
         board.init();
     };
 
 
     this.drawBlock = function drawBlock(st) {
-        board.drawShapeAt(st);
+        board.drawBlock(st);
+
+        // TODO implicitly call draw
         board.draw();
     };
 
@@ -28,24 +29,29 @@ function Drawing($game) {
                 lines[i] += i;
             }
 
-            board.updatePositions(lines);
+            board.clearRows(lines);
         }
 
+        // TODO implicitly call draw
         board.draw();
-    }
+    };
+
+    this.drawSpecial = function drawSpecial(res) {
+        //console.log("draw special: ", res);
+        board.setSpecialBlock(res.j, res.i);
+
+        // TODO implicitly call draw
+        board.draw();
+    };
+
+    // Scoreboard related
 
     this.addPowerUps = function addPowerUps(powerups) {
         //console.log("power ups: " + powerups);
         // TODO
-    }
+    };
 
     this.drawScore = function drawScore(score) {
-        // TODO 
+        // TODO
     };
-  
-    this.drawSpecial = function drawSpecial(res) {
-        //console.log("draw special: ", res);
-        board.updateBlock(res.j, res.i);
-        board.draw();
-    };
-};
+}
