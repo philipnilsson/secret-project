@@ -3,13 +3,13 @@ var printMVPOnce = false;
 var DEBUG        = true;
 
 
-var Color = {
-    WHITE        : [1.0, 1.0, 1.0, 1.0],
-    RED          : [1.0, 0.0, 0.0, 1.0],
-    BLUE_SPECIAL : [0.0, 0.2, 1.0, 1.0],
-    COLOR_SET    : [1.0, 1.0, 0.0, 1.0]
-
-};
+ function Color() {
+    this.WHITE = [1.0, 1.0, 1.0, 1.0];
+    this.RED = [1.0, 0.0, 0.0, 1.0];
+    this.GREEN = [0.0, 1.0, 0.0, 1.0];
+    this.BLUE_SPECIAL = [0.0, 0.4, 1.0, 1.0];
+    this.COLOR_SET = [1.0, 1.0, 0.0, 1.0];
+}
 
 /**
  * Object representing the OGL graphical element for a tetris block
@@ -21,7 +21,7 @@ function GLSquare(gl) {
 
     this.indexBuffer  = -1;
     this.vertexBuffer = -1;
-    this.color = Color.WHITE;
+    this.color = new Color().WHITE;
 
     this.bind = function bind() {
         gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
@@ -43,6 +43,7 @@ function GLSquare(gl) {
  */
 function interpolate(v1, v2, alpha) {
     var res = [];
+
     for (var i = 0; i < v1.length; i++)
         res.push(v1[i] - alpha * (v1[i] - v2[i]));
     return res;
@@ -105,8 +106,9 @@ function Animation(duration, updateRate) {
     };
 
 
-    this.setOnStop = function(onStopCallback) {
+    this.onStop = function(onStopCallback) {
         self.onStopCallback = onStopCallback;
+        return self;
     };
 
     this.getAlpha = function getAlpha(){
@@ -117,6 +119,11 @@ function Animation(duration, updateRate) {
 
         return alpha;
     };
+
+    this.doAnimateForever = function doAnimateForever() {
+        self.animateForever = true;
+        return self;
+    }
 }
 
 function TetrisBoard(renderer) {
@@ -130,9 +137,10 @@ function TetrisBoard(renderer) {
     // TODO create a pool of live blocks and re-use them
     this.blocksAlive = [];
     this.blocksSet   = [];
+    this.blocksKilled = [];
 
     function draw() {
-        self.renderer.draw(self.blocksAlive.concat(self.blocksSet));
+        self.renderer.draw(self.blocksAlive.concat(self.blocksSet).concat(self.blocksKilled));
     }
 
     this.init = function init() {
@@ -158,7 +166,9 @@ function TetrisBoard(renderer) {
         }
         new Animation(100).start(function(a) {
             for(var i=0; i<updatedBlocks.length; i++){
-                updatedBlocks[i].color = interpolate(Color.RED, Color.COLOR_SET, a);
+                if(!updatedBlocks[i].isDead) {
+                    updatedBlocks[i].color = interpolate(new Color().RED, new Color().COLOR_SET, a);
+                }
             }
             draw();
         });
@@ -178,16 +188,20 @@ function TetrisBoard(renderer) {
 
         if (alive) {
             // TODO decide color by type instead..
-            block.color = Color.RED;
+            block.color = new Color().RED;
             self.blocksAlive.push(block);
         } else {
-            block.color = Color.COLOR_SET;
+            block.color = new Color().COLOR_SET;
             self.blocksSet.push(block);
         }
 
         return block;
     }
 
+    /**
+     * Updates the positions according to the rows that has been cleared
+     * @param emptyRows
+     */
     function updatePositions(emptyRows) {
         self.blocksSet.forEach(function (block) {
             block.y += emptyRows.filter(function (o) {
@@ -199,13 +213,57 @@ function TetrisBoard(renderer) {
     this.clearRows = function clearRows(listOfRows) {
         if(DEBUG) console.log("clear rows: " + listOfRows);
 
-        var blocksToSave = self.blocksSet.filter(function (tetrisElement) {
-            return listOfRows.indexOf(tetrisElement.y) == -1
+        var kill = [];
+
+
+        var blocksToSave = self.blocksSet.filter(function (block) {
+            // animate block..
+            var doSaveBlock = listOfRows.indexOf(block.y) == -1;
+
+            if(!doSaveBlock) {
+                kill.push(block);
+            }
+
+            return doSaveBlock;
         });
 
         if (self.blocksSet.length != blocksToSave.length) {
             self.blocksSet = blocksToSave;
         }
+
+        if(kill) {
+            // set initial conditions for every block
+            for(var i=0; i<kill.length; i++) {
+                var b = kill[i];
+                b.isDead = true;
+                b.z = -3;
+                b.startY = kill[i].y;
+                b.endY = 20;
+                b.color = new Color().COLOR_SET;
+                b.acc = Math.random() + 1;
+            }
+
+            new Animation()
+                .onStop(function () {
+                    self.blocksKilled = [];
+                })
+                .start(function (a) {
+                    for (var i = 0; i < kill.length; i++) {
+                        var b = kill[i];
+                        // Use gravity isntead..
+                        b.y = b.startY - a * (b.startY - b.endY) * b.acc;
+                        b.x += Math.random()-0.5;
+                        b.color[3] = Math.max(1 - a, 0);
+
+                        // TODO add a little rotation as well..
+                    }
+
+                    self.blocksKilled = kill;
+
+                    draw();
+                });
+        }
+
 
         updatePositions(listOfRows);
         draw();
@@ -239,8 +297,8 @@ function TetrisBoard(renderer) {
         var prop = {
             block : undefined,
             duration   : 250,
-            startColor : Color.WHITE,
-            endColor   : Color.BLUE_SPECIAL
+            startColor : new Color().WHITE,
+            endColor   : new Color().BLUE_SPECIAL
         };
 
         for (var i = 0; i < self.blocksSet.length; i++) {
@@ -268,6 +326,7 @@ function BaseBlock(type, x, y) {
     this.type = type;
     this.x = x;
     this.y = y;
+    this.z = 0;
 }
 
 // Shaders ============================================================================================

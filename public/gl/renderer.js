@@ -48,7 +48,11 @@ function WebGLRenderer(gl) {
     
     gl.clearDepth(1.0);                 // Clear everything
     gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-    gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+    gl.depthFunc(gl.LESS);            // Near things obscure far things
+
+    gl.enable(gl.BLEND);
+    gl.blendEquation(gl.GL_FUNC_ADD);
+    gl.blendFunc(gl.SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
 
     initTetrisRenderElement(gl);
 
@@ -57,11 +61,10 @@ function WebGLRenderer(gl) {
     this.draw = function draw(allPieces) {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Draw Background
-        // TODO 
-
         // Bind geoemtry
         glSquare.bind();
+
+
 
         if (allPieces != undefined) {
             //go through pieces and draw them.
@@ -73,6 +76,35 @@ function WebGLRenderer(gl) {
                 // Use shader
                 gl.useProgram(shader.program);
 
+                // Draw Background
+                // TODO
+//                if(i == 0) {
+//                    mat4.identity(this.matrixM);
+//                    mat4.translate(this.matrixM, [0, 0, -1]);
+//                    mat4.scale(this.matrixM, [10, 10, 1.0]);
+//
+//                    this.matrixMVP = createMVP(this.matrixM, this.matrixV, this.matrixP);
+//                    // draw bg rec first
+//
+//                    // Bind attributes
+//                    gl.vertexAttribPointer(qualifiers.vertexPosition.handle, 3, gl.FLOAT, false, 0, 0);
+//
+//                    // Bind uniforms
+//                    if(qualifiers.MVP) {
+//                        gl.uniformMatrix4fv(qualifiers.MVP.handle, false, new Float32Array(this.matrixMVP));
+//                    }
+//
+//                    // if we have color bind it to the shader
+//                    if(qualifiers.color) {
+//                        // black bg
+//                        gl.uniform4fv(qualifiers.color.handle, new Float32Array([0,0,0,1]));
+//                    }
+//
+//                    // Draw
+//                    glSquare.draw();
+//
+//                }
+
                 //TODO type decide which shader to use or similar..
                 // for now we use default from shader map
 
@@ -80,7 +112,7 @@ function WebGLRenderer(gl) {
                 // Calculate Model Matrix
                 // TODO move into glsquare
                 mat4.identity(this.matrixM);
-                mat4.translate(this.matrixM, [rect.x, rect.y, 0]);
+                mat4.translate(this.matrixM, [rect.x, rect.y, rect.z]);
                 mat4.scale(this.matrixM, [0.9, 0.9, 1.0]);
 
                 // Calculate MVP Matrix
@@ -96,6 +128,9 @@ function WebGLRenderer(gl) {
 
                 // if we have color bind it to the shader
                 if(qualifiers.color) {
+//                    if(rect.color[3] < 1) {
+//                        console.log("color: " + rect.color[3]) ;
+//                    }
                     gl.uniform4fv(qualifiers.color.handle, new Float32Array(rect.color));
                 }
 
@@ -108,6 +143,7 @@ function WebGLRenderer(gl) {
             printMVP(this.matrixM, this.matrixV, this.matrixP, this.matrixMVP);
             printMVPOnce = false
         }
+
     }
 
     function createMVP(M, V, P) {
@@ -146,4 +182,35 @@ function WebGLRenderer(gl) {
         //upload data to gl
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
     }
+
+
+    // init bg rect
+
+//    function initTetrisRenderElement(gl) {
+//        var z = 0.0;
+//        var w = 1.0;
+//        var h = 1.0;
+//
+//        var vertices = [
+//            0, 0, z,
+//            w, 0, z,
+//            w, h, z,
+//            0, h, z
+//        ];
+//
+//        var squareIndices = [
+//            0, 1, 2,
+//            0, 2, 3
+//        ];
+//
+//        glSquare.vertexBuffer = gl.createBuffer();
+//        gl.bindBuffer(gl.ARRAY_BUFFER, glSquare.vertexBuffer);
+//        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+//
+//        glSquare.indexBuffer = gl.createBuffer();
+//        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glSquare.indexBuffer);
+//
+//        //upload data to gl
+//        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
+//    }
 };

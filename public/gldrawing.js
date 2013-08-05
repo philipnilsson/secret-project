@@ -2,11 +2,18 @@ function Drawing($game) {
     var board;
 
     this.drawGameArea = function drawGameArea(w, h) {
-        var moo = '<canvas width="400" height="800" class="glCanvas">OMFG FAIL!</canvas>'
+        var moo = '<canvas width="400" height="800" class="glCanvas" style="border:1px solid #000000;background: black">OMFG FAIL!</canvas>'
         $game.append(moo)
         
         var canvas = $game.find(".glCanvas").get(0);
-        var gl = this.gl = canvas.getContext("webgl");
+//        var gl = this.gl = canvas.getContext("webgl");
+
+        var gl = canvas.getContext(
+            "experimental-webgl",
+            {
+                premultipliedAlpha: false  // Ask non-premultiplied alpha
+            }
+        );
         var renderer = new WebGLRenderer(gl);
 
         board = new TetrisBoard(renderer);
