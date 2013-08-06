@@ -27,9 +27,13 @@
 
 </head>
 
+<!-- JQUERY-->
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<script type="text/javascript" src="jquery.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
 <link rel="stylesheet" type="text/css" href="tetris.css" />
 
-<script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="bacon.js"></script>
 <script type="text/javascript" src="drawing.js"></script>
 <script>
@@ -62,15 +66,54 @@ var w = 10, h = 20;
   <div id="game2"></div>
   <div id="chat"> </div>
 
+  <div id="test menu" style="display: none">
+      Global Alpha
+      <div id="slider" style="width:100px;"></div>
+
+      <button id="gblocks">Generate Blocks</button>
+  </div>
+
+
+
+
 </body>
 
 <script>
 
 $('#single').on('click', function() {
-    $('button').hide();
+    // TEST =======================================
+    var DEBUG = true;
+    globalAlpha = 1;
+    // ============================================
+
     var inputs = keyInputs();
-    var events = tetris(new Drawing($('#game1')), inputs, false);
+
+    var drawing = new Drawing($('#game1'));
+    var events = tetris(drawing, inputs, false);
     tetris(new Drawing2($('#game2')), events, true);
+
+    // hide start menu
+    document.getElementById('menu').style.display = 'none';
+
+    if(DEBUG) {
+        // TODO check for debug..
+        // show menu..
+        document.getElementById('test menu').style.display = 'inline';
+
+        $("#gblocks").on('click', function() {
+            drawing.generateRandomBlocks();
+        });
+
+        function onSlide(event, ui) {
+            console.log("on slide: " + ui.value);
+            globalAlpha = ui.value;
+            drawing.forceDraw();
+        }
+        $(function() {
+            $( "#slider" ).slider({max : 1, min : 0, step : 0.1, value : 1, slide : onSlide});
+        });
+    }
+
 });
 
 var messages = [];

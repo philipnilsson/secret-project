@@ -23,10 +23,20 @@ function GLSquare(gl) {
     this.vertexBuffer = -1;
     this.color = new Color().WHITE;
 
+    this.matrixM = mat4.create();
+
     this.bind = function bind() {
         gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, self.indexBuffer);
     };
+
+    this.getModelMatrix = function getModelMatrix(position, scale) {
+        mat4.identity(self.matrixM);
+        mat4.translate(self.matrixM, position);
+        mat4.scale(self.matrixM, scale);
+
+        return self.matrixM;
+    }
 
     this.draw = function draw() {
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
@@ -140,6 +150,11 @@ function TetrisBoard(renderer) {
     this.blocksKilled = [];
 
     function draw() {
+        self.renderer.draw(self.blocksAlive.concat(self.blocksSet).concat(self.blocksKilled));
+    }
+
+    this.forceDraw = function forceDraw() {
+        console.log("force draw");
         self.renderer.draw(self.blocksAlive.concat(self.blocksSet).concat(self.blocksKilled));
     }
 
@@ -319,6 +334,16 @@ function TetrisBoard(renderer) {
             if(DEBUG) console.log("Found no block to update; x: " + x + " y: " + y);
         }
 
+    };
+
+
+    // FIXME for testing
+
+    this.addBlockAt = function addBlockAt(i, j) {
+        console.log("add base block x:" + i + " j: " + j);
+        addBaseBlock(shaderMap.TYPE_ANY_COLOR, i, j, true)
+
+        draw();
     };
 }
 

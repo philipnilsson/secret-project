@@ -1,9 +1,10 @@
 function Drawing($game) {
+    var self = this;
     var board;
 
     this.drawGameArea = function drawGameArea(w, h) {
-        var moo = '<canvas width="400" height="800" class="glCanvas" style="border:1px solid #000000;background: black">OMFG FAIL!</canvas>'
-        $game.append(moo)
+        var canvasTag = '<canvas width="400" height="800" class="glCanvas" onclick="canvasClicked()" style="border:1px solid #000000;background: black">OMFG FAIL!</canvas>'
+        $game.append(canvasTag)
         
         var canvas = $game.find(".glCanvas").get(0);
 //        var gl = this.gl = canvas.getContext("webgl");
@@ -18,6 +19,15 @@ function Drawing($game) {
 
         board = new TetrisBoard(renderer);
         board.init();
+
+
+        canvas.onclick = function(event) {
+            var i = Math.floor((event.offsetX / canvas.width) * 10);
+            var j = Math.floor((event.offsetY / canvas.height) * 20);
+
+            board.addBlockAt(i, j);
+        }
+
     };
 
 
@@ -51,4 +61,27 @@ function Drawing($game) {
     this.drawScore = function drawScore(score) {
         // TODO
     };
+
+    this.generateRandomBlocks = function generateRandomBlocks() {
+        var nBlocks = 20;
+
+
+        for(var i=0; i<nBlocks; i++) {
+//            var bs = new BlockState(Block.randomBlock(), undefined, 0, Math.round(Math.random()*10), Math.round(Math.random()*20), true);
+            var bk = Block.randomBlock()
+            var block = new BlockState(window.blocks[bk], undefined, 0, Math.round(Math.random()*10), Math.round(Math.random()*20), true);
+            self.setBlock(block);
+        }
+
+
+        console.log("TODO gen random blocks");
+    }
+
+    this.forceDraw = function forceDraw() {
+        board.forceDraw();
+    }
+
+    this.genRandomBlockZ0 = function genRandomBlockZ0() {
+
+    }
 }
