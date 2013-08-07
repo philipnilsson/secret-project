@@ -1,15 +1,17 @@
 function Drawing($game) {
     var self = this;
-    var board;
+    this.board = undefined;
+    this.canvas = undefined;
+    this.mode = undefined;
 
     this.drawGameArea = function drawGameArea(w, h) {
         var canvasTag = '<canvas width="400" height="800" class="glCanvas" onclick="canvasClicked()" style="border:1px solid #000000;background: black">OMFG FAIL!</canvas>'
         $game.append(canvasTag)
-        
-        var canvas = $game.find(".glCanvas").get(0);
+
+        self.canvas = $game.find(".glCanvas").get(0);
 //        var gl = this.gl = canvas.getContext("webgl");
 
-        var gl = canvas.getContext(
+        var gl = self.canvas.getContext(
             "experimental-webgl",
             {
                 premultipliedAlpha: false  // Ask non-premultiplied alpha
@@ -17,38 +19,30 @@ function Drawing($game) {
         );
         var renderer = new WebGLRenderer(gl);
 
-        board = new TetrisBoard(renderer);
-        board.init();
-
-
-        canvas.onclick = function(event) {
-            var i = Math.floor((event.offsetX / canvas.width) * 10);
-            var j = Math.floor((event.offsetY / canvas.height) * 20);
-
-            board.addBlockAt(i, j);
-        }
+        self.board = new TetrisBoard(renderer);
+        self.board.init();
 
     };
 
 
     this.drawBlock = function drawBlock(st) {
-        board.drawBlock(st);
+        self.board.drawBlock(st);
     };
 
     this.setBlock = function setBlock(st, lines) {
-        board.setBlock(st);
+        self.board.setBlock(st);
 
         if(lines) {
             for(var i=0; i<lines.length; i++) {
                 lines[i] += i;
             }
 
-            board.clearRows(lines);
+            self.board.clearRows(lines);
         }
     };
 
     this.drawSpecial = function drawSpecial(res) {
-        board.setSpecialBlock(res.j, res.i);
+        self.board.setSpecialBlock(res.j, res.i);
     };
 
 
@@ -78,10 +72,6 @@ function Drawing($game) {
     }
 
     this.forceDraw = function forceDraw() {
-        board.forceDraw();
-    }
-
-    this.genRandomBlockZ0 = function genRandomBlockZ0() {
-
+        self.board.forceDraw();
     }
 }

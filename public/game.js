@@ -24,7 +24,7 @@ var gameLogic = function(input, board) {
   
   var paused = $(document).asEventStream('keydown').filter(function(ev) {
     return ev.keyCode == 80;
-  }).scan(true, function(x) { return !x })
+  }).scan(false, function(x) { return !x })
   
   input.filter(paused).takeWhile(bus).onValue(function (dir) {
     block = Block.moveDir(dir, block);

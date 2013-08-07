@@ -25,6 +25,14 @@
         }
     </script>
 
+    <style>
+        #feedback { font-size: 1.4em; }
+        #selectable .ui-selecting { background: #FECA40; }
+        #selectable .ui-selected { background: #F39814; color: white; }
+        #selectable { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+        #selectable li { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; width: 250px }
+    </style>
+
 </head>
 
 <!-- JQUERY-->
@@ -47,10 +55,7 @@
 <script type="text/javascript" src="socket.io/socket.io.js"></script>
 
 <script type="text/javascript">
-  
-var w = 10, h = 20;
-
-
+    var w = 10, h = 20;
 </script>
 
 <body>
@@ -69,6 +74,11 @@ var w = 10, h = 20;
   <div id="test menu" style="display: none">
       Global Alpha
       <div id="slider" style="width:100px;"></div>
+
+      <ol id="selectable">
+          <li>Add Mode</li>
+          <li>Edit Mode</li>
+      </ol>
 
       <button id="gblocks">Generate Blocks</button>
   </div>
@@ -100,17 +110,49 @@ $('#single').on('click', function() {
         // show menu..
         document.getElementById('test menu').style.display = 'inline';
 
-        $("#gblocks").on('click', function() {
-            drawing.generateRandomBlocks();
-        });
-
         function onSlide(event, ui) {
             console.log("on slide: " + ui.value);
             globalAlpha = ui.value;
             drawing.forceDraw();
         }
+
+        $("#gblocks").on('click', function() {
+            drawing.generateRandomBlocks();
+        });
+
+        var mode = undefined;
+
+        function modeIsSelected(event, ui) {
+            switch(ui.selecting.innerText) {
+                case "Add Mode":
+                    mode = "addMode";
+                    break;
+                case "Edit Mode":
+                    mode = "editMode";
+                    break;
+            }
+        }
+
+        drawing.canvas.onclick = function(event) {
+            var i = Math.floor((event.offsetX / drawing.canvas.width) * 10);
+            var j = Math.floor((event.offsetY / drawing.canvas.height) * 20);
+
+            switch(mode) {
+                case "addMode":
+                    drawing.board.addBlockAt(i, j);
+                    break ;
+                case "editMode":
+//                    board.getBlockAt();
+                    break;
+            }
+        };
+
         $(function() {
             $( "#slider" ).slider({max : 1, min : 0, step : 0.1, value : 1, slide : onSlide});
+        });
+
+        $(function() {
+            $( "#selectable" ).selectable({selecting : modeIsSelected});
         });
     }
 
