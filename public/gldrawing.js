@@ -1,27 +1,23 @@
 function Drawing($game) {
     var self = this;
+    var usePremultipliedAlpha = false;
+
     this.board = undefined;
     this.canvas = undefined;
-    this.mode = undefined;
 
     this.drawGameArea = function drawGameArea(w, h) {
-        var canvasTag = '<canvas width="400" height="800" class="glCanvas" onclick="canvasClicked()" style="border:1px solid #000000;background: black">OMFG FAIL!</canvas>'
+        var canvasTag = '<canvas width="400" height="800" class="glCanvas" onclick="canvasClicked()">WebGL fails you so bad it hurts</canvas>'
         $game.append(canvasTag)
 
         self.canvas = $game.find(".glCanvas").get(0);
-//        var gl = this.gl = canvas.getContext("webgl");
+        var gl  = usePremultipliedAlpha
+            ? self.canvas.getContext("webgl")
+            : self.canvas.getContext( "experimental-webgl", { premultipliedAlpha: false  });
 
-        var gl = self.canvas.getContext(
-            "experimental-webgl",
-            {
-                premultipliedAlpha: false  // Ask non-premultiplied alpha
-            }
-        );
         var renderer = new WebGLRenderer(gl);
 
         self.board = new TetrisBoard(renderer);
         self.board.init();
-
     };
 
 
@@ -45,7 +41,6 @@ function Drawing($game) {
         self.board.setSpecialBlock(res.j, res.i);
     };
 
-
     // Scoreboard related
     this.addPowerUps = function addPowerUps(powerups) {
         //console.log("power ups: " + powerups);
@@ -59,12 +54,9 @@ function Drawing($game) {
     this.generateRandomBlocks = function generateRandomBlocks() {
         var nBlocks = 20;
 
-
+        // TODO make sure no duplicates??
         for(var i=0; i<nBlocks; i++) {
-//            var bs = new BlockState(Block.randomBlock(), undefined, 0, Math.round(Math.random()*10), Math.round(Math.random()*20), true);
-            var bk = Block.randomBlock()
-            var block = new BlockState(window.blocks[bk], undefined, 0, Math.round(Math.random()*10), Math.round(Math.random()*20), true);
-            self.setBlock(block);
+            self.board.addBlockAt(Math.round(Math.random()*10), Math.round(Math.random()*20));
         }
 
 

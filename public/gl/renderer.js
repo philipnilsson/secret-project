@@ -4,7 +4,8 @@ function WebGLRenderer(gl) {
     var self = this;
     this.gl = gl;
 
-    this.clearColor = [0.0, 0.0, 0.0, 1.0];
+    var useBlending = true;
+    this.clearColor = [0.13, 0.13, 0.13, 1.0];
 
     this.camera = {
         eye    : [0, 0, 1],
@@ -14,10 +15,14 @@ function WebGLRenderer(gl) {
 
     var glSquare = new GLSquare(gl);
 
+    /**
+     * Model matrix
+     */
     this.matrixM   = mat4.create();
     this.matrixV   = mat4.create();
     this.matrixP   = mat4.create();
     this.matrixMVP = mat4.create();
+
 
     //TODO remove hard coding grid and rather set it
     this.grid = {
@@ -31,33 +36,30 @@ function WebGLRenderer(gl) {
         alert("Unable to initialize WebGL. Your browser may not support it.");
     }
 
-    //  var ratio = canvas.width / canvas.height;
-    //  var matrixP = mat4.perspective(45, ratio, 0.1, 100.0);
+    //setup projection matrix
+    self.matrixP = mat4.ortho(0, self.grid.w, self.grid.h, 0, 0.1, 10);
 
-    //setup projection testMatrix
-    this.matrixP = mat4.ortho(0, this.grid.w, this.grid.h, 0, 0.1, 100);
-
-    //setup view testMatrix
-    this.matrixV = mat4.lookAt(this.camera.eye, this.camera.center, this.camera.up);
+    //setup view matrix
+    self.matrixV = mat4.lookAt(self.camera.eye, self.camera.center, self.camera.up);
 
     gl.clearColor(
-        this.clearColor[0],
-        this.clearColor[1],
-        this.clearColor[2],
-        this.clearColor[3]);
+        self.clearColor[0],
+        self.clearColor[1],
+        self.clearColor[2],
+        self.clearColor[3]);
 
-    // Depth
-    gl.clearDepth(1.0);
+
+
+
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LESS);
 
-    // Blending
-    var blendingColor = [0, 0.5, 0, 1];
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-    gl.blendColor(blendingColor[0], blendingColor[1], blendingColor[2], blendingColor[3]);
-    gl.blendEquation(gl.FUNC_ADD);
-
+    if(useBlending) {
+        gl.depthFunc(gl.LESS);
+        gl.enable(gl.BLEND);
+        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.blendEquation(gl.FUNC_ADD);
+    }
 
     initRenderableBlock(gl);
 
@@ -123,11 +125,12 @@ function WebGLRenderer(gl) {
 
                 // if we have color bind it to the shader
                 if(qualifiers.color) {
-                    if(globalAlpha) {
-                        gl.uniform4fv(qualifiers.color.handle, new Float32Array([block.color[0], block.color[1], block.color[2], globalAlpha]));
-                    } else {
-                        gl.uniform4fv(qualifiers.color.handle, new Float32Array(block.color));
-                    }
+                    gl.uniform4fv(qualifiers.color.handle, new Float32Array(block.color));
+//                    if(globalAlpha) {
+//                        gl.uniform4fv(qualifiers.color.handle, new Float32Array([block.color[0], block.color[1], block.color[2], globalAlpha]));
+//                    } else {
+//
+//                    }
                 }
 
                 // Draw
@@ -137,6 +140,7 @@ function WebGLRenderer(gl) {
     }
 
     this.draw = function draw(allBlocks) {
+//        gl.clear(gl.COLOR_BUFFER_BIT);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         if(allBlocks.length != 0) {

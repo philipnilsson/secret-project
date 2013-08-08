@@ -59,31 +59,61 @@
 </script>
 
 <body>
-  <div id="menu"> 
-    <button id="single"> Single-player </button>
-    <button id="host"> New </button>
-    <button id="join"> Join </button>
-  </div>
-  <div id="waitingroom"> </div>
-  <div id="rooms"> </div>
-  
-  <div id="game1"></div>
-  <div id="game2"></div>
-  <div id="chat"> </div>
+<div id="menu">
+    <button id="single"> Single-player</button>
+    <button id="host"> New</button>
+    <button id="join"> Join</button>
+</div>
+<div id="waitingroom"></div>
+<div id="rooms"></div>
 
-  <div id="test menu" style="display: none">
-      Global Alpha
-      <div id="slider" style="width:100px;"></div>
+<div id="game1"></div>
+<div id="game2"></div>
+<div id="chat"></div>
 
-      <ol id="selectable">
-          <li>Add Mode</li>
-          <li>Edit Mode</li>
-      </ol>
+<div id="test menu" style="display: none">
+    <ol id="selectable">
+        <li>Add Mode</li>
+        <li>Edit Mode</li>
+        <li>Effect Mode</li>
+    </ol>
 
-      <button id="gblocks">Generate Blocks</button>
-  </div>
+    <button id="gblocks">Generate Blocks</button>
+    <button id="totalBlocks">Total Blocks</button>
+    <div id="block_info" style="display: none">
+        Block info
+        <div>
+            <label>x
+                <input id="x" class="editBlock" type="number" value="-" width="50px">
+            </label>
+        </div>
+        <div>
+            <label>y
+                <input id="y" class="editBlock" type="number" value="-" width="50px">
+            </label>
+        </div>
+        <div>
+            <label>z
+                <input id="z" class="editBlock" type="number" value="-" width="50px">
+            </label>
+        </div>
+        <div>
+            <label id="blockColor">color
+                <input id="r" class="blockColor" type="number" value="-" style="max-width: 50px" step="0.1" min="0" max="1.0">
+                <input id="g" class="blockColor" type="number" value="-" style="max-width: 50px" step="0.1" min="0" max="1.0">
+                <input id="b" class="blockColor" type="number" value="-" style="max-width: 50px" step="0.1" min="0" max="1.0">
+                <input id="a" class="blockColor" type="number" value="-" style="max-width: 50px" step="0.1" min="0" max="1.0">
+            </label>
 
+        </div>
+    </div>
 
+    <div id="effects" style="display: none">
+        <label>Select effect
+            <select id="selectEffect"></select>
+        </label>
+    </div>
+</div>
 
 
 </body>
@@ -93,11 +123,9 @@
 $('#single').on('click', function() {
     // TEST =======================================
     var DEBUG = true;
-    globalAlpha = 1;
     // ============================================
 
     var inputs = keyInputs();
-
     var drawing = new Drawing($('#game1'));
     var events = tetris(drawing, inputs, false);
     tetris(new Drawing2($('#game2')), events, true);
@@ -106,23 +134,63 @@ $('#single').on('click', function() {
     document.getElementById('menu').style.display = 'none';
 
     if(DEBUG) {
+        var mode = undefined;
+        var selectedBlock = undefined;
+        var availableEffects = ["clear row", "explosion"];
+        var selectedEffect = availableEffects[0];
+        var editBlocks = $(".editBlock");
+
         // TODO check for debug..
         // show menu..
-        document.getElementById('test menu').style.display = 'inline';
+        document.getElementById('test menu').style.display = 'compact';
 
-        function onSlide(event, ui) {
-            console.log("on slide: " + ui.value);
-            globalAlpha = ui.value;
-            drawing.forceDraw();
+        // add effects to effect drop down
+        for(var i=0; i<availableEffects.length; i++) {
+            var option = '<option value=' + i + '>' + availableEffects[i] + '</option>';
+            var effectSelector = $("#selectEffect").append(option);
         }
+
+        $("#totalBlocks").on('click', function() {
+            // TODO not the way probably..
+            var stats = drawing.board.getBlocksStatistics();
+
+            console.log("blocks live: " + stats.aliveBlocks);
+            console.log("blocks set: " + stats.setBlocks);
+            console.log("blocks being killed: " + stats.killedOffBlocks);
+
+
+        });
+
 
         $("#gblocks").on('click', function() {
             drawing.generateRandomBlocks();
         });
 
-        var mode = undefined;
+        $("#blockColor").on("change", function(event) {
+            var ui = event.srcElement;
+            if (selectedBlock) {
+                switch (ui.id) {
+                    case "r":
+                        selectedBlock.color[0] = ui.value;
+                        break;
+                    case "g":
+                        selectedBlock.color[1] = ui.value;
+                        break;
+                    case "b":
+                        selectedBlock.color[2] = ui.value;
+                        break;
+                    case "a":
+                        selectedBlock.color[3] = ui.value;
+                        break;
+                }
+
+                drawing.forceDraw();
+            }
+        });
 
         function modeIsSelected(event, ui) {
+            setEffectModeEnabled(false);
+
             switch(ui.selecting.innerText) {
                 case "Add Mode":
                     mode = "addMode";
@@ -130,26 +198,91 @@ $('#single').on('click', function() {
                 case "Edit Mode":
                     mode = "editMode";
                     break;
+                case "Effect Mode":
+                    setEffectModeEnabled(true);
+                    mode = "effectMode";
+                    break;
             }
         }
 
-        drawing.canvas.onclick = function(event) {
-            var i = Math.floor((event.offsetX / drawing.canvas.width) * 10);
-            var j = Math.floor((event.offsetY / drawing.canvas.height) * 20);
+        function setBlockInfoEnabled(enabled) {
+            $("#block_info").get(0).style.display = enabled ? "compact" : "none";
+        }
 
-            switch(mode) {
+        function setEffectModeEnabled(enabled) {
+            $("#effects").get(0).style.display = enabled ? "compact" : "none";
+        }
+
+        // Setup on click for canvas..
+        drawing.canvas.onclick = function(event) {
+            var x = Math.floor((event.offsetX / drawing.canvas.width) * 10);
+            var y = Math.floor((event.offsetY / drawing.canvas.height) * 20);
+
+            switch (mode) {
                 case "addMode":
-                    drawing.board.addBlockAt(i, j);
-                    break ;
+                    drawing.board.addBlockAt(x, y);
+                    break;
                 case "editMode":
+                    var block = drawing.board.getBlockAt(x, y);
+                    if (block) {
+                        setBlockInfoEnabled(true);
+                        selectedBlock = block;
+                        $("#x").get(0).value = block.x;
+                        $("#y").get(0).value = block.y;
+                        $("#z").get(0).value = block.z;
+                        console.log("block found: " + block);
+
+
+                        var blockColor = $("#blockColor").get(0).children;
+
+                        for (var i = 0; i < blockColor.length; i++) {
+                            // TODO
+                            blockColor[i].value = block.color[i];
+                        }
+
+
+                    } else {
+                        setBlockInfoEnabled(false);
+                        selectedBlock = undefined;
+                    }
 //                    board.getBlockAt();
+                    break;
+                case "effectMode":
+                    switch (selectedEffect) {
+                        case "clear row":
+                            drawing.board.clearRows([y]);
+                            break;
+                        case "explosion":
+                            break;
+                    }
                     break;
             }
         };
 
-        $(function() {
-            $( "#slider" ).slider({max : 1, min : 0, step : 0.1, value : 1, slide : onSlide});
-        });
+        for(var i=0; i<editBlocks.length; i++) {
+            editBlocks[i].onchange = function(event) {
+                var ui = event.srcElement;
+
+                if(selectedBlock) {
+                    var value = ui.value;
+                    console.log("id: " + ui.id);
+                    switch(ui.id) {
+                        case "x":
+                            selectedBlock.x = value;
+                            console.log("selected block x:" + selectedBlock.x);
+                            break;
+                        case "y":
+                            selectedBlock.y = value;
+                            break;
+                        case "z":
+                            selectedBlock.z = value;
+                            break;
+                    }
+
+                    drawing.forceDraw();
+                }
+            }
+        }
 
         $(function() {
             $( "#selectable" ).selectable({selecting : modeIsSelected});
@@ -262,9 +395,9 @@ function blocksFromSocket(gameEvents, callback) {
     blockEvents.onValue(function(x) {
         buf.push(x.block);
     });
-    
-    return function() { 
-        if (buf.length > 0) 
+
+    return function() {
+        if (buf.length > 0)
             return Bacon.once(blocks[buf.shift()]);
 
         return blockEvents.take(1).map(function(x) {
