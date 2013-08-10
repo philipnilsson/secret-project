@@ -147,8 +147,12 @@ $('#single').on('click', function() {
         // add effects to effect drop down
         for(var i=0; i<availableEffects.length; i++) {
             var option = '<option value=' + i + '>' + availableEffects[i] + '</option>';
-            var effectSelector = $("#selectEffect").append(option);
+            $("#selectEffect").append(option);
         }
+
+        $("#selectEffect").on("change", function(event) {
+            selectedEffect = availableEffects[event.srcElement.selectedIndex];
+        });
 
         $("#totalBlocks").on('click', function() {
             // TODO not the way probably..
@@ -158,9 +162,7 @@ $('#single').on('click', function() {
             console.log("blocks set: " + stats.setBlocks);
             console.log("blocks being killed: " + stats.killedOffBlocks);
 
-
         });
-
 
         $("#gblocks").on('click', function() {
             drawing.generateRandomBlocks();
@@ -253,6 +255,8 @@ $('#single').on('click', function() {
                             drawing.board.clearRows([y]);
                             break;
                         case "explosion":
+                            console.log("explostion effect");
+                            drawing.board.clearRows([y], "explosion");
                             break;
                     }
                     break;

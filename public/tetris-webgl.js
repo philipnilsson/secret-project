@@ -9,6 +9,7 @@ var DEBUG        = true;
     this.GREEN = [0.0, 1.0, 0.0, 1.0];
     this.BLUE_SPECIAL = [0.0, 0.4, 1.0, 1.0];
     this.COLOR_SET = [1.0, 1.0, 0.0, 1.0];
+    this.BACKGROUND = [0.12, 0.12, 0.12, 1.0];
 }
 
 /**
@@ -152,12 +153,14 @@ function TetrisBoard(renderer) {
     var blocksSet   = [];
     var blocksBeingKilled = [];
 
+    var bgBlocks = new Array(10);
+
     function getAllBlocks() {
         return blocksAlive.concat(blocksSet.concat(blocksBeingKilled));
     }
 
     function draw() {
-        self.renderer.draw(getAllBlocks());
+        self.renderer.draw(getAllBlocks(), bgBlocks);
     }
 
     this.forceDraw = function forceDraw() {
@@ -166,6 +169,19 @@ function TetrisBoard(renderer) {
     }
 
     this.init = function init() {
+        console.log("init gl renderer");
+        // create bg blocks
+
+        for(var x=0; x<10; x++) {
+            bgBlocks[x] = new Array(20);
+            for(var y=0; y<20; y++) {
+                bgBlocks[x][y] = new BaseBlock(shaderMap.TYPE_ANY_COLOR, x, y);
+                bgBlocks[x][y].color = new Color().BACKGROUND;
+                bgBlocks[x][y].z = -1;
+            }
+        }
+
+        // clears the board..
         draw();
     };
 
@@ -225,13 +241,14 @@ function TetrisBoard(renderer) {
      */
     function updatePositions(emptyRows) {
         blocksSet.forEach(function (block) {
+            // TODO Animate this instead?
             block.y += emptyRows.filter(function (o) {
                 return block.y <= o;
             }).length;
         });
     }
 
-    this.clearRows = function clearRows(listOfRows) {
+    this.clearRows = function clearRows(listOfRows, clearRowFunction) {
         if(DEBUG) console.log("clear rows: " + listOfRows);
 
         var blockBeingAnimated = [];
@@ -247,46 +264,21 @@ function TetrisBoard(renderer) {
             return doSaveBlock;
         });
 
-        console.log("blocks to save: " + blocksToSave.length);
-        console.log("blocks to kill: " + blockBeingAnimated.length);
+        if(DEBUG) console.log("blocks to save: " + blocksToSave.length);
+        if(DEBUG) console.log("blocks to kill: " + blockBeingAnimated.length);
 
         if (blocksSet.length != blocksToSave.length) {
             blocksSet = blocksToSave;
         }
 
         if (blockBeingAnimated) {
-            // initial animation conditions for each block
-            blockBeingAnimated.forEach(function (b) {
-                // Kill the current animation if there is on the block
-                if (b.animation) b.animation.stop();
-                b.z = 0.5; // move blocks above others
-                b.startY = b.y;
-                b.vStart = 0;
-                b.acc = Math.random() + 1;
-            });
-
-
-            new Animation().onStop(function () {
-                console.log("animation stopped clearing killed blocks");
-                blockBeingAnimated = [];
-//                    blocksBeingKilled = [];
-                console.log("blocks killed: " + blocksBeingKilled.length);
-            })
-                .start(function (alpha) {
-                    console.log("on animate");
-                    for (var i = 0; i < blockBeingAnimated.length; i++) {
-                        var b = blockBeingAnimated[i];
-                        //  y = s0 + v0*t + 0.5 * a *t * t
-                        b.y = b.startY - (b.vStart * alpha - 9.82 * alpha * alpha * 0.5);
-                        b.color[3] = Math.max(1 - alpha, 0);
-
-                        // TODO add a little rotation as well..
-                    }
-
-                    blocksBeingKilled = blockBeingAnimated;
-
-                    draw();
-                });
+            if(clearRowFunction) {
+                if(clearRowFunction == "explosion") {
+                    explosionAnimation(blockBeingAnimated);
+                }
+            } else {
+                gravityAnimation(blockBeingAnimated);
+            }
         }
 
         updatePositions(listOfRows);
@@ -338,12 +330,108 @@ function TetrisBoard(renderer) {
                 prop.block.color = interpolate(prop.startColor, prop.endColor, alpha);
                 draw();
             });
-
         } else {
             if(DEBUG) console.log("Found no block to update; x: " + x + " y: " + y);
         }
-
     };
+
+    /**
+     * Animates blocks falling as if gravity were pulling them down.
+     * @param blocks
+     */
+    function gravityAnimation(blocks) {
+        // initial animation conditions for each block
+        blocks.forEach(function (b) {
+            // Kill and remove any current animations
+            if (b.animation) {
+                b.animation.stop();
+                b.animation = undefined;
+            }
+            b.z = 0.5; // move blocks above others
+            b.startY = b.y;
+            b.startVy = 0;
+            b.acc = Math.random() + 1;
+        });
+
+        new Animation()
+            .onStop(function () {
+                console.log("animation stopped clearing killed blocks");
+                blocks = [];
+                console.log("blocks killed: " + blocksBeingKilled.length);
+            })
+            .start(function (alpha) {
+                console.log("on animate");
+                for (var i = 0; i < blocks.length; i++) {
+                    var b = blocks[i];
+                    //  y = s0 + v0*t + 0.5 * a *t * t
+                    b.y = b.startY - (b.startVy * alpha - 9.82 * alpha * alpha * 0.5);
+                    b.color[3] = Math.max(1 - alpha, 0);
+
+                    // TODO add a little rotation as well..
+                }
+
+                // Make sure blocks will be drawn
+                blocksBeingKilled = blocks;
+
+                draw();
+            }
+        );
+    }
+
+    function explosionAnimation(blocks) {
+
+        var g = 9.82;
+        // initial animation conditions for each block
+        blocks.forEach(function (b) {
+            // Kill and remove any current animations
+            if (b.animation) {
+                b.animation.stop();
+                b.animation = undefined;
+            }
+            b.z = 0.5; // move blocks above others
+            b.startX = b.x;
+            b.startY = b.y;
+
+            // [0, 2pi]
+            var randDir = Math.random() * 2 * Math.PI;
+            b.startVx = Math.cos(randDir) * 5;
+            b.startVy = Math.sin(randDir) * 15;
+
+            b.accY = 9.82;
+            b.accX = b.startVx;
+
+            b.acc = Math.random() + 1;
+        });
+
+        new Animation()
+            .onStop(function () {
+                console.log("animation stopped clearing killed blocks");
+                blocks = [];
+                console.log("blocks killed: " + blocksBeingKilled.length);
+            })
+            .start(function (alpha) {
+                console.log("on animate");
+                for (var i = 0; i < blocks.length; i++) {
+                    var b = blocks[i];
+                    // update x pos
+                    b.x = b.startX - (b.startVx * alpha - b.accX * alpha * alpha * 0.5);
+
+                    // update y pos
+                    b.y = b.startY - (b.startVy * alpha - b.accY * alpha * alpha * 0.5);
+
+                    b.color[3] = Math.max(1 - alpha, 0);
+
+                    // TODO add a little rotation as well..
+                }
+
+                // Make sure blocks will be drawn
+                blocksBeingKilled = blocks;
+
+                draw();
+            }
+        );
+    }
+
 
 
     // FIXME for testing
@@ -358,7 +446,7 @@ function TetrisBoard(renderer) {
     this.getBlockAt = function getBlockAt(i, j) {
         var filteredBlocks = getAllBlocks().filter(function(block) { return block.x == i && block.y == j; });
         return filteredBlocks[0];
-    }
+    };
 
     this.getBlocksStatistics = function getBlocksStatistics(){
         return {
@@ -366,11 +454,12 @@ function TetrisBoard(renderer) {
             setBlocks        : blocksSet.length,
             killedOffBlocks :  blocksBeingKilled.length
         }
-    }
+    };
 
 }
 
 function BaseBlock(type, x, y) {
+    this.color = new Color().WHITE;
     this.type = type;
     this.x = x;
     this.y = y;
