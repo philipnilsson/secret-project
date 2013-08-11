@@ -61,9 +61,18 @@ function Drawing($game) {
 
 
         console.log("TODO gen random blocks");
-    }
+    };
+
+    this.fillBlocks = function fillBlocks() {
+        for(var i=0; i<10; i++) {
+            for(var j=0; j<20; j++) {
+                self.board.addBlockAt(i, j);
+
+            }
+        }
+    };
 
     this.forceDraw = function forceDraw() {
         self.board.forceDraw();
-    }
+    };
 }

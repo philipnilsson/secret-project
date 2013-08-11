@@ -129,7 +129,7 @@ function WebGLRenderer(gl, grid) {
 
                 // TODO Optimize matrix multiplications
                 // Calculate Model Matrix
-                matrixM = squareModel.getModelMatrix([block.x, block.y, block.z], [0.9, 0.9, 1.0]);
+                matrixM = squareModel.getModelMatrix([block.x, block.y, block.z], [0.9, 0.9, 1.0], [block.rotZ, block.rotZ, block.rotZ]);
 
                 // Combine M, V and P into the MVP Matrix
                 calculateMVP(matrixM, matrixV, matrixP);
@@ -221,14 +221,9 @@ function WebGLRenderer(gl, grid) {
 
             var qualifiers = shader.getQualifiers();
 
-
-
-            //
             shader.getQualifierHandles(squareModel)
 
             // get all models with that effect
-
-
 
         }
     }

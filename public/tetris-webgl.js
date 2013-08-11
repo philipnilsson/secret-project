@@ -31,10 +31,28 @@ function SquareModel(gl) {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, self.indexBuffer);
     };
 
-    this.getModelMatrix = function getModelMatrix(position, scale) {
+    this.getModelMatrix = function getModelMatrix(position, scale, rotation) {
         mat4.identity(self.matrixM);
-        mat4.translate(self.matrixM, position);
-        mat4.scale(self.matrixM, scale);
+
+        if(position) mat4.translate(self.matrixM, position);
+
+        if(rotation){
+            var rotX = rotation[0];
+            var rotY = rotation[1];
+            var rotZ = rotation[2];
+
+            // Center square model.
+            mat4.translate(self.matrixM, [0.5, 0.5, 0]);
+
+            if(rotX) mat4.rotateX(self.matrixM, rotX);
+            if(rotY) mat4.rotateY(self.matrixM, rotY);
+            if(rotZ) mat4.rotateZ(self.matrixM, rotZ);
+
+            mat4.translate(self.matrixM, [-0.5, -0.5, 0]);
+        }
+
+        if(scale) mat4.scale(self.matrixM, scale);
+
 
         return self.matrixM;
     }
@@ -379,31 +397,36 @@ function TetrisBoard(renderer) {
     }
 
     function explosionAnimation(blocks) {
-
+        var initialV = 10;
         var g = 9.82;
         // initial animation conditions for each block
         blocks.forEach(function (b) {
-            // Kill and remove any current animations
             if (b.animation) {
+                // Kill and remove any current animations
                 b.animation.stop();
                 b.animation = undefined;
+                // Since this is the final animation of a block no reference will be set again for b.animation
             }
+
             b.z = 0.5; // move blocks above others
             b.startX = b.x;
             b.startY = b.y;
 
-            // [0, 2pi]
-            var randDir = Math.random() * 2 * Math.PI;
-            b.startVx = Math.cos(randDir) * 5;
-            b.startVy = Math.sin(randDir) * 15;
+            var randDir = Math.random() * 2 * Math.PI; // [0, 2pi]
+            b.startVx = Math.cos(randDir) * initialV;
+            b.startVy = Math.sin(randDir) * initialV;
 
-            b.accY = 9.82;
+            b.accY = g;
             b.accX = b.startVx;
 
             b.acc = Math.random() + 1;
+
+            b.color = new Color().GREEN;
+            b.rotV = ((Math.random() * 2) -1) * 50;
         });
 
-        new Animation()
+
+        new Animation(500)
             .onStop(function () {
                 console.log("animation stopped clearing killed blocks");
                 blocks = [];
@@ -419,9 +442,11 @@ function TetrisBoard(renderer) {
                     // update y pos
                     b.y = b.startY - (b.startVy * alpha - b.accY * alpha * alpha * 0.5);
 
+                    // Fade out color
                     b.color[3] = Math.max(1 - alpha, 0);
 
-                    // TODO add a little rotation as well..
+                    // Rotation
+                    b.rotZ = alpha * b.rotV;
                 }
 
                 // Make sure blocks will be drawn
@@ -431,8 +456,6 @@ function TetrisBoard(renderer) {
             }
         );
     }
-
-
 
     // FIXME for testing
 

@@ -79,6 +79,7 @@
     </ol>
 
     <button id="gblocks">Generate Blocks</button>
+    <button id="fillblocks">Fill With Blocks</button>
     <button id="totalBlocks">Total Blocks</button>
     <div id="block_info" style="display: none">
         Block info
@@ -166,6 +167,10 @@ $('#single').on('click', function() {
 
         $("#gblocks").on('click', function() {
             drawing.generateRandomBlocks();
+        });
+
+        $("#fillblocks").on('click', function() {
+            drawing.fillBlocks();
         });
 
         $("#blockColor").on("change", function(event) {
