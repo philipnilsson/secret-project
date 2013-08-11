@@ -10,7 +10,6 @@ function WebGLRenderer(gl, grid) {
     var self = this;
     this.gl = gl;
 
-    var useBlending = true;
     this.clearColor = [0.27, 0.27, 0.27, 1.0];
 
     this.camera = {
@@ -19,30 +18,24 @@ function WebGLRenderer(gl, grid) {
         up     : [0, 1, 0]
     }
 
-    var glSquare = new GLSquare(gl);
-
-    // TODO do not need to expose these matrices.
+    var squareModel = new SquareModel(gl);
 
     // Model matrix
-    this.matrixM   = mat4.create();
+    var matrixM   = mat4.create();
 
     // View matrix
-    this.matrixV   = mat4.create();
+    var matrixV   = mat4.create();
 
     // Projection matrix
-    this.matrixP   = mat4.create();
+    var matrixP   = mat4.create();
 
     // Model-View-Projection matrix
-    this.matrixMVP = mat4.create();
+    var matrixMVP = mat4.create();
 
-    if(grid) {
-        this.grid = grid;
-    } else {
-        this.grid = {
-            w : 10,
-            h : 20
-        };
-    }
+    // If we want to use transparency
+    var useBlending = true;
+
+    if(!grid) grid = { w : 10, h : 20 };
 
     // Constructor ===================================================
     if (!gl) {
@@ -50,10 +43,10 @@ function WebGLRenderer(gl, grid) {
     }
 
     //Setup projection matrix
-    self.matrixP = mat4.ortho(0, self.grid.w, self.grid.h, 0, 0.1, 10);
+    matrixP = mat4.ortho(0, grid.w, grid.h, 0, 0.1, 10);
 
     //Setup view matrix
-    self.matrixV = mat4.lookAt(self.camera.eye, self.camera.center, self.camera.up);
+    matrixV = mat4.lookAt(self.camera.eye, self.camera.center, self.camera.up);
 
     gl.clearColor(
         self.clearColor[0],
@@ -75,74 +68,49 @@ function WebGLRenderer(gl, grid) {
 
     initRenderableBlock(gl);
 
-    // ================================================================
+    /**
+     *
+     * @param allBlocks an NxN array
+     */
+    function drawMatrix(allBlocks) {
+        var nCols = allBlocks.length;
+        var nRows = allBlocks[0].length;
 
-    function drawBackground(shader) {
-        var qualifiers = shader.Qualifiers;
-
-        // bind geometry
-        glSquare.bind();
-
-        // compute MVP for geometry
-        self.matrixM = glSquare.getModelMatrix([0, 0, -1], [10, 20, 1.0]);
-        self.matrixMVP = calculateMVP(self.matrixM, self.matrixV, self.matrixP);
-
-        // enable shader
-        gl.useProgram(shader.program);
-
-        // Bind attributes
-        gl.vertexAttribPointer(qualifiers.vertexPosition.handle, 3, gl.FLOAT, false, 0, 0);
-
-        // Bind uniforms
-        if (qualifiers.MVP) {
-            gl.uniformMatrix4fv(qualifiers.MVP.handle, false, new Float32Array(self.matrixMVP));
-        }
-
-        if (qualifiers.color) {
-            // black bg
-            gl.uniform4fv(qualifiers.color.handle, new Float32Array([0, 1, 0, 0.5]));
-        }
-
-        // Draw
-        glSquare.draw();
-
-    }
-
-    function drawBgMatrix(allBlocks) {
         if (allBlocks) {
-            glSquare.bind();
-            //go through pieces and draw them.
-            for (var i = 0; i < 10; i++) {
-                for (var j = 0; j < 20; j++) {
+            squareModel.bind();
+            for (var i = 0; i < nCols; i++) {
+                for (var j = 0; j < nRows; j++) {
                     var block = allBlocks[i][j];
                     var shader = block.type;
-                    var qualifiers = shader.Qualifiers;
 
-                    // Tetris block stahder
+                    // Tetris block shader
                     gl.useProgram(shader.program);
 
                     // TODO Optimize matrix multiplications
                     // Calculate Model Matrix
-                    self.matrixM = glSquare.getModelMatrix([block.x, block.y, block.z], [0.9, 0.9, 1.0]);
+                    matrixM = squareModel.getModelMatrix([block.x, block.y, block.z], [0.9, 0.9, 1.0]);
 
                     // Combine M, V and P into the MVP Matrix
-                    calculateMVP(self.matrixM, self.matrixV, self.matrixP);
+                    calculateMVP(matrixM, matrixV, matrixP);
 
-                    // Bind attributes
-                    gl.vertexAttribPointer(qualifiers.vertexPosition.handle, 3, gl.FLOAT, false, 0, 0);
-
-                    // Bind uniforms
-                    if(qualifiers.MVP) {
-                        gl.uniformMatrix4fv(qualifiers.MVP.handle, false, new Float32Array(self.matrixMVP));
-                    }
-
-                    // if we have color bind it to the shader
-                    if(qualifiers.color) {
-                        gl.uniform4fv(qualifiers.color.handle, new Float32Array(block.color));
-                    }
+                    // Bind qualifiers
+                    shader.qualifiers.forEach(function(q){
+                        switch (q.name) {
+                            case StandardQualifierNames.MVP:
+                                gl.uniformMatrix4fv(q.handle, false, new Float32Array(matrixMVP));
+                                break;
+                            case StandardQualifierNames.VERTEX_POSITION:
+                                // Bind attributes
+                                gl.vertexAttribPointer(q.handle, 3, gl.FLOAT, false, 0, 0);
+                                break;
+                            case StandardQualifierNames.COLOR:
+                                gl.uniform4fv(q.handle, new Float32Array(block.color));
+                                break;
+                        }
+                    });
 
                     // Draw
-                    glSquare.draw();
+                    squareModel.draw();
                 }
             }
         }
@@ -150,38 +118,40 @@ function WebGLRenderer(gl, grid) {
 
     function drawBlocks(allBlocks) {
         if (allBlocks != undefined) {
-            glSquare.bind();
+            squareModel.bind();
             //go through pieces and draw them.
             for (var i = 0; i < allBlocks.length; i++) {
                 var block = allBlocks[i];
                 var shader = block.type;
-                var qualifiers = shader.Qualifiers;
 
                 // Tetris block stahder
                 gl.useProgram(shader.program);
 
                 // TODO Optimize matrix multiplications
                 // Calculate Model Matrix
-                self.matrixM = glSquare.getModelMatrix([block.x, block.y, block.z], [0.9, 0.9, 1.0]);
+                matrixM = squareModel.getModelMatrix([block.x, block.y, block.z], [0.9, 0.9, 1.0]);
 
                 // Combine M, V and P into the MVP Matrix
-                calculateMVP(self.matrixM, self.matrixV, self.matrixP);
+                calculateMVP(matrixM, matrixV, matrixP);
 
-                // Bind attributes
-                gl.vertexAttribPointer(qualifiers.vertexPosition.handle, 3, gl.FLOAT, false, 0, 0);
-
-                // Bind uniforms
-                if(qualifiers.MVP) {
-                    gl.uniformMatrix4fv(qualifiers.MVP.handle, false, new Float32Array(self.matrixMVP));
-                }
-
-                // if we have color bind it to the shader
-                if(qualifiers.color) {
-                    gl.uniform4fv(qualifiers.color.handle, new Float32Array(block.color));
-                }
+                // Bind qualifiers
+                shader.qualifiers.forEach(function(q){
+                    switch (q.name) {
+                        case StandardQualifierNames.MVP:
+                            gl.uniformMatrix4fv(q.handle, false, new Float32Array(matrixMVP));
+                            break;
+                        case StandardQualifierNames.VERTEX_POSITION:
+                            // Bind attributes
+                            gl.vertexAttribPointer(q.handle, 3, gl.FLOAT, false, 0, 0);
+                            break;
+                        case StandardQualifierNames.COLOR:
+                            gl.uniform4fv(q.handle, new Float32Array(block.color));
+                            break;
+                    }
+                });
 
                 // Draw
-                glSquare.draw();
+                squareModel.draw();
             }
         }
     }
@@ -190,7 +160,7 @@ function WebGLRenderer(gl, grid) {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         if(bgblocks.length > 0) {
-            drawBgMatrix(bgblocks);
+            drawMatrix(bgblocks);
         }
 
         if(allBlocks.length != 0) {
@@ -201,16 +171,14 @@ function WebGLRenderer(gl, grid) {
             printMVP(this.matrixM, this.matrixV, this.matrixP, this.matrixMVP);
             printMVPOnce = false
         }
-
-    }
+    };
 
     function calculateMVP(M, V, P) {
-        //TODO type decide which shader to use or similar..
-        mat4.identity(self.matrixMVP);
-        mat4.multiply(P, V, self.matrixMVP);
-        mat4.multiply(self.matrixMVP, M, self.matrixMVP);
+        mat4.identity(matrixMVP);
+        mat4.multiply(P, V, matrixMVP);
+        mat4.multiply(matrixMVP, M, matrixMVP);
 
-        return self.matrixMVP;
+        return matrixMVP;
     }
 
     function initRenderableBlock(gl) {
@@ -230,15 +198,39 @@ function WebGLRenderer(gl, grid) {
             0, 2, 3
         ];
 
-        glSquare.vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, glSquare.vertexBuffer);
+        squareModel.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, squareModel.vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-        glSquare.indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glSquare.indexBuffer);
+        squareModel.indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareModel.indexBuffer);
 
         //upload data to gl
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareIndices), gl.STATIC_DRAW);
+    }
+
+
+    /**
+     * Improved draw loop
+     */
+    function improvedDraw(effects) {
+        // for each effect ie shader
+
+        for(var i=0; i<effects.length; i++) {
+            var shader = effects[i];
+
+            var qualifiers = shader.getQualifiers();
+
+
+
+            //
+            shader.getQualifierHandles(squareModel)
+
+            // get all models with that effect
+
+
+
+        }
     }
 }
 

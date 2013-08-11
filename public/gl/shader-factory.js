@@ -1,52 +1,79 @@
+/**
+ * Definition of standard shader qualifiers
+ * @type {{MVP: string, VERTEX_POSITION: string, COLOR: string}}
+ */
+var StandardQualifierNames = {
+    MVP             : "mvp",
+    VERTEX_POSITION : "vertexPosition",
+    COLOR           : "color"
+};
+
+function Qualifier(name, glslName) {
+    this.name     = name;
+    this.glslName = glslName;
+    this.handle   = -1;
+    this.value    = -1;
+    // todo could add bind function as well
+}
 
 function Shader() {
     var self = this;
+    var sqn = StandardQualifierNames;
+
     this.program = -1;
     this.fragmentShader = -1;
     this.vertexShader = -1;
 
-    this.Qualifiers = {
-        // Uniforms
-        MVP            : { handle : -1, name : "uMVP" },
-        color          : { handle : -1, name : "uColor" },
-
-        // Attributes    
-        vertexPosition : { handle : -1, name : "aVertexPosition" }
-        //TODO
-        // normal         : "aNormal",
-        // biNormal       : "aBiNormal",
-        // tangent        : "aTangent"
-    }
+    // TODO ref: #1
+    this.qualifiers =
+        [
+            new Qualifier(sqn.MVP, "uMVP"),
+            new Qualifier(sqn.COLOR, "uColor"),
+            new Qualifier(sqn.VERTEX_POSITION, "aVertexPosition")
+        ];
 
     /**
      * Verfies that the shader is properly initiated
      */
     this.verify = function verify() {
-        var keys = Object.keys(self.Qualifiers);
+        var failedVerification = false;
+        var report = undefined;
 
-        for (var i = 0; i < keys.length; i++) {
-            if (self.Qualifiers[keys[i]].handle == -1) {
-                console.log("no handle for: " + keys[i]);
-                return false;
+        for(var i=0; i<self.qualifiers.length; i++) {
+            var q = self.qualifiers[i];
+            if(q.handle == -1) {
+                failedVerification = true;
+                report = q.name + " handle was not bound with GLSL variable: " + q.glslName;
+                break;
             }
         }
 
-        return true;
+        return {failed : failedVerification, report : report};
     };
 
-    this.bindQualifiers = function bindQualifiers(gl) {
-        var q = self.Qualifiers;
-        //TODO
-        q.vertexPosition.handle = gl.getAttribLocation(self.program, q.vertexPosition.name);
-        q.MVP.handle = gl.getUniformLocation(self.program, q.MVP.name);
-        q.color.handle = gl.getUniformLocation(self.program, q.color.name);
+    this.getQualifierHandles = function getQualifierHandles(gl) {
+        // TODO here we could find the qualifiers from the shader code itself instead of hard coding it.. in #1
 
-        gl.enableVertexAttribArray(q.vertexPosition.handle);
-    }
+        self.qualifiers.forEach(function(q){
+           switch (q.name) {
+               case sqn.COLOR:
+                   q.handle = gl.getUniformLocation(self.program, q.glslName);
+                   break;
+               case sqn.MVP:
+                   q.handle = gl.getUniformLocation(self.program, q.glslName);
+                   break;
+               case sqn.VERTEX_POSITION:
+                   q.handle = gl.getAttribLocation(self.program, q.glslName);
+                   gl.enableVertexAttribArray(q.handle);
+                   break;
+           }
+        });
+
+        console.log("bound qualifier handles");
+    };
 }
 
 function ShaderFactory(gl) {
-    var self = this;
 
     this.makeShader = function makeShader(vsString, fsString) {
         var shader = new Shader();
@@ -55,8 +82,17 @@ function ShaderFactory(gl) {
         shader.vertexShader   = createShader(gl.VERTEX_SHADER, vsString);
         shader.program        = createAndLinkProgram(shader.vertexShader, shader.fragmentShader);
 
+        // if shader compiled successfully get the handles..
+        shader.getQualifierHandles(gl);
+
+        var verification = shader.verify();
+
+        if(verification.failed) {
+            alert("Verification of shader failed: " + verification.report);
+        }
+
         return shader;
-    }
+    };
 
     function createAndLinkProgram(vs, fs) {
         var program = gl.createProgram();
@@ -70,25 +106,34 @@ function ShaderFactory(gl) {
         }
 
         return program
-
     }
 
     function createShader(glShaderType, src) {
-        if (glShaderType && src) {
-            var shader = gl.createShader(glShaderType);
+        var shader = gl.createShader(glShaderType);
 
-            gl.shaderSource(shader, src);
-            gl.compileShader(shader);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
 
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
-                shader = -1;
-            }
-
-            return shader;
-        } else {
-            console.log("no shadertype or shader source")
-            return -1;
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert("Error while compiling " + getShaderName(glShaderType) + ": " + gl.getShaderInfoLog(shader));
         }
+
+        return shader;
+    }
+
+    /**
+     * Convenience function to get a readable name of GLSL shader types
+     * @param shaderType The type of shader
+     * @returns {string}
+     */
+    function getShaderName(shaderType) {
+        switch (shaderType) {
+            case gl.VERTEX_SHADER:
+                return "Vertex Shader";
+            case gl.FRAGMENT_SHADER:
+                return "Fragment Shader";
+        }
+
+        return "Unknown shader type: " + shaderType;
     }
 }

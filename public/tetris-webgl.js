@@ -17,7 +17,7 @@ var DEBUG        = true;
  * @param gl
  * @constructor
  */
-function GLSquare(gl) {
+function SquareModel(gl) {
     var self = this;
 
     this.indexBuffer  = -1;
@@ -479,7 +479,7 @@ function createColorShader(gl) {
 
     gl.useProgram(shader.program);
 
-    shader.bindQualifiers(gl);
+    shader.getQualifierHandles(gl);
 
     if (!shader.verify()) {
         alert("Failed binding qualifiers for color shader");
