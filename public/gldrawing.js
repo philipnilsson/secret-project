@@ -47,6 +47,11 @@ function Drawing($game) {
         // TODO
     };
 
+
+    this.drawGameOver = function drawGameOver() {
+
+    };
+
     this.drawScore = function drawScore(score) {
         // TODO
     };

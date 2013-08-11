@@ -57,4 +57,8 @@ function Drawing($game) {
     this.drawSpecial = function drawSpecial(res) {
       self.$rows.find('.row').eq(res.i).find('.cell').eq(res.j).addClass('special');
     };
+
+    this.drawGameOver = function drawGameOver() {
+        // TODO månkey
+    }
 }

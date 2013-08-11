@@ -14,7 +14,7 @@ function keyInputs() {
     }
     return Bacon.never();
   }).merge(Bacon.interval(200).map('ts'));
-}
+};
 
 var gameLogic = function(input, board) {
   
@@ -61,7 +61,7 @@ var replayGameLogic = function(bus, board) {
   });
   
   return blocks
-}
+};
 
 function tetris(drawing, input, replay) {
   
@@ -96,8 +96,9 @@ function tetris(drawing, input, replay) {
   });
   
   g.onEnd(function() {
+    drawing.drawGameOver();
     console.log('you dead');
-  })
+  });
   
   return bus;
 };
